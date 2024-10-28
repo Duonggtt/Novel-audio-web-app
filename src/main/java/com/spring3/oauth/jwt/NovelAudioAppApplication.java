@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaRepositories(repositoryBaseClass = RefreshableCRUDRepositoryImpl.class)
 @SpringBootApplication
+@PropertySource("file:.env")
 public class NovelAudioAppApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
