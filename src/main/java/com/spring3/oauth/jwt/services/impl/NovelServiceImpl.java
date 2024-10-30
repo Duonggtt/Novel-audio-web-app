@@ -3,7 +3,9 @@ package com.spring3.oauth.jwt.services.impl;
 import com.spring3.oauth.jwt.entity.Genre;
 import com.spring3.oauth.jwt.entity.Novel;
 import com.spring3.oauth.jwt.entity.User;
+import com.spring3.oauth.jwt.entity.UserLike;
 import com.spring3.oauth.jwt.exception.NotFoundException;
+import com.spring3.oauth.jwt.models.dtos.NovelDetailResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PagedResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PaginationDTO;
@@ -21,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +37,7 @@ public class NovelServiceImpl implements NovelService {
     private final GenreRepository genreRepository;
     private final ChapterRepository chapterRepository;
     private final UserRepository userRepository;
+    private final UserLikeRepository userLikeRepository;
 
 
     @Override
@@ -97,6 +101,50 @@ public class NovelServiceImpl implements NovelService {
         PaginationDTO pagination = new PaginationDTO(recommendNovelList.getNumber(), recommendNovelList.getSize(), recommendNovelList.getTotalElements());
         return new PagedResponseDTO(novelDTOs, pagination);
     }
+
+    @Override
+    public boolean isNovelLikedByUser(long userId, String novelSlug) {
+        return userLikeRepository.findByUser_IdAndNovel_Slug(userId, novelSlug)
+            .isPresent();
+    }
+
+    @Override
+    public List<String> getLikedNovelSlugsByUser(Long userId) {
+        return userLikeRepository.findLikedNovelSlugsByUser(userId);
+    }
+
+    @Override
+    public List<String> getLikedNovelIdsByUserForSpecificNovels(Long userId, List<Integer> novelIds) {
+        return userLikeRepository.findLikedNovels(userId, novelIds);
+    }
+
+    @Override
+    public boolean likeNovel( long userId, String slug) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        Novel novel = novelRepository.findBySlug(slug);
+        if(novel == null) {
+            throw new NotFoundException("Novel not found with id: " + slug);
+        }
+        Optional<UserLike> existingLike = userLikeRepository
+            .findByUser_IdAndNovel_Slug(userId, slug);
+        if (existingLike.isPresent()) {
+            // Nếu đã like rồi thì xóa like (unlike)
+            userLikeRepository.delete(existingLike.get());
+            log.info("Removed like for novel: {} by user: {}", slug, userId);
+            return false;
+        } else {
+            // Nếu chưa like thì tạo like mới
+            UserLike newLike = new UserLike();
+            newLike.setUser(user);
+            newLike.setNovel(novel);
+            newLike.setLikedAt(LocalDateTime.now());
+            userLikeRepository.save(newLike);
+            log.info("Added like for novel: {} by user: {}", slug, userId);
+            return true;
+        }
+    }
+
 
     @Override
     public PagedResponseDTO findAllByAuthorName(String authorName, Pageable pageable) {
@@ -185,12 +233,12 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
-    public NovelResponseDTO getDetailNovel(String slug) {
+    public NovelDetailResponseDTO getDetailNovel(String slug, long userId) {
         Novel novel = novelRepository.findBySlug(slug);
         if(novel == null) {
             throw new NotFoundException("Novel not found with slug " + slug);
         }
-        return convertToDto(novel);
+        return convertToDtoDetail(novel, userId);
     }
 
     @Override
@@ -232,9 +280,11 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
-    public NovelResponseDTO updateNovel(Integer novelId, UpsertNovelRequest request) {
-        Novel novel = novelRepository.findById(novelId)
-            .orElseThrow(() -> new NotFoundException("Novel not found with id " + novelId));
+    public NovelResponseDTO updateNovel(String novelSlug, UpsertNovelRequest request) {
+        Novel novel = novelRepository.findBySlug(novelSlug);
+        if(novel == null) {
+            throw new NotFoundException("Novel not found with slug: " + novelSlug);
+        }
         novel.setTitle(request.getTitle());
         novel.setSlug(request.getSlug());
         novel.setDescription(request.getDescription());
@@ -258,9 +308,9 @@ public class NovelServiceImpl implements NovelService {
         novelRepository.delete(novel);
     }
 
-
     NovelResponseDTO convertToDto(Novel novel) {
         NovelResponseDTO dto = new NovelResponseDTO();
+
         dto.setTitle(novel.getTitle());
         dto.setSlug(novel.getSlug());
         dto.setDescription(novel.getDescription());
@@ -272,6 +322,41 @@ public class NovelServiceImpl implements NovelService {
         dto.setTotalChapters(novel.getTotalChapters());
         dto.setAverageRatings(novel.getAverageRatings());
         dto.setLikeCounts(novel.getLikeCounts());
+        if(novel.getAuthor() == null) {
+            dto.setAuthorName(null);
+        }else {
+            dto.setAuthorName(novel.getAuthor().getName());
+        }
+        if(novel.getGenres() == null) {
+            dto.setGenreNames(null);
+        }
+        else {
+            dto.setGenreNames(novel.getGenres()
+                .stream()
+                .map(Genre::getName)
+                .collect(Collectors.toList())
+            );
+        }
+        return dto;
+    }
+
+    NovelDetailResponseDTO convertToDtoDetail(Novel novel, long userId) {
+        NovelDetailResponseDTO dto = new NovelDetailResponseDTO();
+        boolean isLiked = userLikeRepository.findByUser_IdAndNovel_Slug(userId, novel.getSlug())
+            .isPresent();
+
+        dto.setTitle(novel.getTitle());
+        dto.setSlug(novel.getSlug());
+        dto.setDescription(novel.getDescription());
+        dto.setReleasedAt(novel.getReleasedAt());
+        dto.setStatus(novel.getStatus());
+        dto.setClosed(novel.isClosed());
+        dto.setThumbnailImageUrl(novel.getThumbnailImageUrl());
+        dto.setReadCounts(novel.getReadCounts());
+        dto.setTotalChapters(novel.getTotalChapters());
+        dto.setAverageRatings(novel.getAverageRatings());
+        dto.setLikeCounts(novel.getLikeCounts());
+        dto.setLiked(isLiked);
         if(novel.getAuthor() == null) {
             dto.setAuthorName(null);
         }else {
