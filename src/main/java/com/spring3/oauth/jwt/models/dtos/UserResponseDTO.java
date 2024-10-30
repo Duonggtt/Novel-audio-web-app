@@ -22,4 +22,5 @@ public class UserResponseDTO {
     private LocalDateTime updatedAt;
     private String tierName;
     private List<Integer> selectedGenreIds;
+    private List<String> hobbyNames;
 }

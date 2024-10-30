@@ -70,4 +70,6 @@ public class User {
     @ManyToMany(fetch = LAZY)
     private List<Genre> selectedGenres;
 
+    @ManyToMany(fetch = LAZY)
+    private List<Hobby> hobbies;
 }

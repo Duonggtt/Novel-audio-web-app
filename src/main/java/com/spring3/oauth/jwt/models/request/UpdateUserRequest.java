@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 @Data
 @AllArgsConstructor
@@ -17,4 +18,5 @@ public class UpdateUserRequest {
     private String fullName;
     private String email;
     private LocalDate dob;
+    private List<Integer> hobbyIds;
 }

@@ -1,8 +1,6 @@
 package com.spring3.oauth.jwt.services.impl;
 
-import com.spring3.oauth.jwt.entity.Genre;
-import com.spring3.oauth.jwt.entity.Role;
-import com.spring3.oauth.jwt.entity.Tier;
+import com.spring3.oauth.jwt.entity.*;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
 import com.spring3.oauth.jwt.models.dtos.UserResponseDTO;
@@ -11,11 +9,7 @@ import com.spring3.oauth.jwt.models.request.GenresSelectedRequest;
 import com.spring3.oauth.jwt.models.request.UpdateUserRequest;
 import com.spring3.oauth.jwt.models.request.UserRequest;
 import com.spring3.oauth.jwt.models.response.UserResponse;
-import com.spring3.oauth.jwt.entity.User;
-import com.spring3.oauth.jwt.repositories.GenreRepository;
-import com.spring3.oauth.jwt.repositories.RoleRepository;
-import com.spring3.oauth.jwt.repositories.TierRepository;
-import com.spring3.oauth.jwt.repositories.UserRepository;
+import com.spring3.oauth.jwt.repositories.*;
 import com.spring3.oauth.jwt.services.EmailService;
 import com.spring3.oauth.jwt.services.UserService;
 import org.modelmapper.ModelMapper;
@@ -50,6 +44,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private HobbyRepository hobbyRepository;
 
     // Hàm xử lý quên mật khẩu
     @Override
@@ -209,6 +205,7 @@ public class UserServiceImpl implements UserService {
         user.setDob(null);
         user.setChapterReadCount(0);
         user.setSelectedGenres(null);
+        user.setHobbies(null);
         if(userRequest.getId() != null){
             User oldUser = userRepository.findFirstById(userRequest.getId());
             if(oldUser != null){
@@ -224,6 +221,7 @@ public class UserServiceImpl implements UserService {
                 oldUser.setDob(null);
                 oldUser.setChapterReadCount(user.getChapterReadCount());
                 oldUser.setSelectedGenres(null);
+                oldUser.setHobbies(null);
                 savedUser = userRepository.save(oldUser);
                 userRepository.refresh(savedUser);
             } else {
@@ -263,9 +261,14 @@ public class UserServiceImpl implements UserService {
         if(user == null){
             throw new RuntimeException("User with username: " + username + " is not found..!!");
         }
+        List<Hobby> hobbies = hobbyRepository.findAllById(request.getHobbyIds());
+        if(hobbies.isEmpty()) {
+            throw new NullPointerException("Hobby ids is null!");
+        }
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setDob(request.getDob());
+        user.setHobbies(hobbies);
         userRepository.save(user);
         return convertToDTO(user);
     }
@@ -309,6 +312,16 @@ public class UserServiceImpl implements UserService {
                 .toList()
             );
         }
+        if(user.getHobbies().isEmpty()) {
+            userResponseDTO.setHobbyNames(null);
+        }else{
+            userResponseDTO.setHobbyNames(user.getHobbies()
+                .stream()
+                .map(Hobby::getName)
+                .toList()
+            );
+        }
+
         return userResponseDTO;
     }
 
