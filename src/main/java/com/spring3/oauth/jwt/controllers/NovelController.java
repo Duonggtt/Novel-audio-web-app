@@ -1,9 +1,11 @@
 package com.spring3.oauth.jwt.controllers;
 
 
+import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
 import com.spring3.oauth.jwt.models.request.UpsertNovelRequest;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
+import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ import java.util.List;
 public class NovelController {
 
     private final NovelServiceImpl novelService;
+    private final UserServiceImpl userService;
 
     @GetMapping("/")
     public ResponseEntity<?> getAllNovels() {
@@ -29,8 +32,8 @@ public class NovelController {
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<?> getNovelBySlug(@PathVariable String slug) {
-        return ResponseEntity.ok(novelService.getDetailNovel(slug));
+    public ResponseEntity<?> getNovelBySlug(@PathVariable String slug, @RequestParam long userId) {
+        return ResponseEntity.ok(novelService.getDetailNovel(slug, userId));
     }
 
     @GetMapping("/trending")
@@ -70,9 +73,9 @@ public class NovelController {
         return new ResponseEntity<>(novel, HttpStatus.CREATED);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateNovel(@PathVariable Integer id, @Valid @RequestBody UpsertNovelRequest request) {
-        NovelResponseDTO novel = novelService.updateNovel(id, request);
+    @PutMapping("/update/{slug}")
+    public ResponseEntity<?> updateNovel(@PathVariable String slug, @Valid @RequestBody UpsertNovelRequest request) {
+        NovelResponseDTO novel = novelService.updateNovel(slug, request);
         return new ResponseEntity<>(novel, HttpStatus.OK);
     }
 
@@ -100,5 +103,24 @@ public class NovelController {
     @GetMapping("/search/by-title")
     public ResponseEntity<?> searchNovelsByTitle(@RequestParam String title, Pageable pageable) {
         return ResponseEntity.ok(novelService.findAllByTitle(title, pageable));
+    }
+
+    // API kiểm tra trạng thái like của người dùng cho một truyện
+    @GetMapping("/{novelSlug}/is-liked")
+    public boolean isNovelLiked(@PathVariable String novelSlug, @RequestParam long userId) {
+        return novelService.isNovelLikedByUser(userId, novelSlug);
+    }
+
+    // API lấy danh sách các truyện mà người dùng đã like
+    @GetMapping("/liked-novels")
+    public List<String> getLikedNovelsByUser(@RequestParam long userId) {
+        return novelService.getLikedNovelSlugsByUser(userId);
+    }
+
+    // API để "like" truyện dựa trên slug
+    @PostMapping("/{slug}/like")
+    public ResponseEntity<Boolean> likeNovel(@PathVariable String slug, @RequestParam long userId) {
+        boolean isLiked = novelService.likeNovel(userId, slug);
+        return ResponseEntity.ok(isLiked);
     }
 }
