@@ -2,6 +2,7 @@ package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.entity.Notification;
 import com.spring3.oauth.jwt.services.NotificationService;
+import com.spring3.oauth.jwt.services.impl.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,13 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
 @RequestMapping("/api/notifications")
 public class NotificationController {
-    private final NotificationService notificationService;
+    private final NotificationServiceImpl notificationService;
+
+    @GetMapping("/")
+    public ResponseEntity<?> getNotifications(@RequestParam long userId) {
+        List<Notification> notifications = notificationService.getNotifications(userId);
+        return ResponseEntity.ok(notifications);
+    }
 
     // Lấy thông báo chưa đọc của người dùng
     @GetMapping("/unread")

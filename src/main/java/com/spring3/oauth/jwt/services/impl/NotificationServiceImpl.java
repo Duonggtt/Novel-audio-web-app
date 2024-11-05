@@ -55,4 +55,12 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setIsRead(true);
         notificationRepository.save(notification);
     }
+
+    @Override
+    public List<Notification> getNotifications(long userId) {
+        List<Notification> notiList = notificationRepository.findByUserId(userId);
+        if(notiList.isEmpty())
+            throw new NotFoundException("No notification found");
+        return notiList;
+    }
 }
