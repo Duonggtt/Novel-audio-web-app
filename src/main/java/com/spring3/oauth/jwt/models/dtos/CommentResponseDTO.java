@@ -19,4 +19,5 @@ public class CommentResponseDTO {
     private String user_image_path;
     private String username;
     private Integer novelId;
+    private Integer parentId;
 }

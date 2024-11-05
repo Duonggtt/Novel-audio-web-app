@@ -31,4 +31,9 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "novel_id")
     private Novel novel;
+
+    // Nhận biết binh luận nào là cha nào là con
+    @ManyToOne
+    @JoinColumn(name = "parent_id", nullable = true) // Bình luận gốc sẽ có parent_id là null
+    private Comment parent;
 }

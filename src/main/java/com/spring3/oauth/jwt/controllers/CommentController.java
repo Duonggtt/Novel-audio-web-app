@@ -28,4 +28,10 @@ public class CommentController {
         commentService.deleteComment(id);
         return ResponseEntity.ok("Comment deleted successfully");
     }
+
+    // API mới: Trả lời bình luận
+    @PostMapping("/reply")
+    public ResponseEntity<?> saveReply(@RequestParam Integer parentCommentId, @RequestBody CreateCommentRequest request) {
+        return ResponseEntity.ok(commentService.saveReply(parentCommentId, request));
+    }
 }

@@ -60,7 +60,7 @@ public class SecurityConfig {
                     "/api/v1/forgot-password", "api/v1/reset-password", "/api/v1/verify-otp", "/api/genres/", "/api/v1/select-genres").permitAll()
 
                 .requestMatchers("/api/audio-files/**","/api/authors/**", "/api/chapters/**", "/api/comments/**", "/api/genres/**", "/api/novels/**", "/api/users/**", "/api/liked-novels/**",
-                    "/api/rates/**", "/api/reading-library/**", "/api/reading-progress/**", "/api/images/**", "/api/v1/**")
+                    "/api/rates/**", "/api/reading-library/**", "/api/reading-progress/**", "/api/images/**", "/api/v1/**", "/api/notifications/**")
                 .authenticated())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
