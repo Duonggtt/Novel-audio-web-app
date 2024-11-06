@@ -46,7 +46,7 @@ public class ChapterServiceImpl implements ChapterService {
         }
         // Mapping từ Chapter sang ChapterResponseDTO
         List<ChapterResponseDTO> chapterDTOs = chapters.stream()
-            .map(this::convertToDTO)
+            .map(this::convertToDTOForPage)
             .toList();
 
         // Tạo đối tượng PaginationDTO
@@ -91,6 +91,19 @@ public class ChapterServiceImpl implements ChapterService {
         chapter.setContentDoc(request.getContentDoc());
         chapter.setThumbnailImageUrl(request.getThumbnailImageUrl());
         return convertToDTO(chapterRepository.save(chapter));
+    }
+
+    ChapterResponseDTO convertToDTOForPage(Chapter chapter) {
+        ChapterResponseDTO chapterResponseDTO = new ChapterResponseDTO();
+        chapterResponseDTO.setId(chapter.getId());
+        chapterResponseDTO.setChapterNo(chapter.getChapterNo());
+        chapterResponseDTO.setTitle(chapter.getTitle());
+        chapterResponseDTO.setReleasedAt(chapter.getReleasedAt());
+        chapterResponseDTO.setContentDoc(chapter.getContentDoc()
+            .substring(0, Math.min(chapter.getContentDoc().length(), 200)));
+        chapterResponseDTO.setThumbnailImageUrl(chapter.getThumbnailImageUrl());
+        chapterResponseDTO.setNovelId(chapter.getNovel().getId());
+        return chapterResponseDTO;
     }
 
     ChapterResponseDTO convertToDTO(Chapter chapter) {
