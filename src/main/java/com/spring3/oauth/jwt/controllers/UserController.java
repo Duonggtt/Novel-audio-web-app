@@ -163,4 +163,14 @@ public class UserController {
     public ResponseEntity<?> selectGenresForProfile(@RequestParam Long userId, @RequestBody GenresSelectedRequest request) {
         return new ResponseEntity<>(userService.updateSelectedGenres(userId, request), HttpStatus.CREATED);
     }
+
+    @GetMapping("/bxh/top-read")
+    public ResponseEntity<?> getTopRead() {
+        return ResponseEntity.ok(userService.getTopRead());
+    }
+    
+    @GetMapping("/bxh/top-point")
+    public ResponseEntity<?> getTopPoint() {
+        return ResponseEntity.ok(userService.getTopPoint());
+    }
 }

@@ -16,6 +16,7 @@ public class UserResponseDTO {
     private String username;
     private String email;
     private String accountStatus;
+    private int point;
     private int chapterReadCount;
     private String imagePath;
     private LocalDateTime createdAt;

@@ -49,6 +49,9 @@ public class User {
     @Column(name = "chapter_read_count")
     private int chapterReadCount;
 
+    @Column(name = "point")
+    private int point = 1;
+
     @Column(name = "dob")
     private LocalDate dob;
 

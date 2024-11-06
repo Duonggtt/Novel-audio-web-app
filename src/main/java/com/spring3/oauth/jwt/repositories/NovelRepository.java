@@ -114,4 +114,6 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
         "JOIN n.genres g " +
         "WHERE n.title LIKE %?1%")
     Page<Novel> findAllByTitleContaining(String title, Pageable pageable);
+
+
 }

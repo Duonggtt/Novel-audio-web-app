@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
-@RequestMapping("/api/reading-progress")
+@RequestMapping("/api/v1/reading-progress")
 public class ReadingProgressController {
     private final ReadingProgressService readingProgressService;
 

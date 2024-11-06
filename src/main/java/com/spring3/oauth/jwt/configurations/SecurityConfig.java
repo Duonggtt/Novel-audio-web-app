@@ -57,10 +57,10 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeRequests(authorize -> authorize
                 .requestMatchers("/api/v1/save", "/api/v1/login", "/api/v1/refreshToken",
-                    "/api/v1/forgot-password", "api/v1/reset-password", "/api/v1/verify-otp", "/api/genres/", "/api/v1/select-genres").permitAll()
+                    "/api/v1/forgot-password", "api/v1/reset-password", "/api/v1/verify-otp", "/api/v1/genres/", "/api/v1/select-genres", "/api/v1/novels/**", "/api/v1/bxh/top-read", "api/v1/bxh/top-point", "/api/v1/novels/bxh/top-read").permitAll()
 
-                .requestMatchers("/api/audio-files/**","/api/authors/**", "/api/chapters/**", "/api/comments/**", "/api/genres/**", "/api/novels/**", "/api/users/**", "/api/liked-novels/**",
-                    "/api/rates/**", "/api/reading-library/**", "/api/reading-progress/**", "/api/images/**", "/api/v1/**", "/api/notifications/**")
+                .requestMatchers("/api/v1/audio-files/**","/api/v1/authors/**", "/api/v1/chapters/**", "/api/v1/comments/**", "/api/v1/genres/**", "/api/v1/users/**", "/api/v1/liked-novels/**",
+                    "/api/v1/rates/**", "/api/v1/reading-library/**", "/api/v1/reading-progress/**", "/api/v1/images/**", "/api/v1/**", "/api/v1/notifications/**", "/api/v1/novels/save", "/api/v1/novels/like-count-update/**", "/api/v1/novels/like/**", "/api/v1/novels/update/**")
                 .authenticated())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

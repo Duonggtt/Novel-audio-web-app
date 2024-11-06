@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/reading-library")
+@RequestMapping("/api/v1/reading-library")
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
 @RequiredArgsConstructor
 public class ReadingLibraryController {

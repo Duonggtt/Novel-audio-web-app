@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
-@RequestMapping("/api/novels")
+@RequestMapping("/api/v1/novels")
 public class NovelController {
 
     private final NovelServiceImpl novelService;
@@ -55,6 +55,12 @@ public class NovelController {
         return ResponseEntity.ok(novelService.getAllTopNovels(pageable));
     }
 
+    @GetMapping("/bxh/top-read")
+    public ResponseEntity<?> getBxhTopReadNovels(
+        @PageableDefault(size = 10, sort = "readCounts", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(novelService.getAllTopNovels(pageable));
+    }
+
     @GetMapping("/new-released")
     public ResponseEntity<?> getNovelsReleasedLast7Days(
         @PageableDefault(size = 10, sort = "releasedAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -73,6 +79,7 @@ public class NovelController {
         return new ResponseEntity<>(novel, HttpStatus.CREATED);
     }
 
+    
     @PutMapping("/update/{slug}")
     public ResponseEntity<?> updateNovel(@PathVariable String slug, @Valid @RequestBody UpsertNovelRequest request) {
         NovelResponseDTO novel = novelService.updateNovel(slug, request);
@@ -118,7 +125,7 @@ public class NovelController {
     }
 
     // API để "like" truyện dựa trên slug
-    @PostMapping("/{slug}/like")
+    @PostMapping("/like/{slug}")
     public ResponseEntity<Boolean> likeNovel(@PathVariable String slug, @RequestParam long userId) {
         boolean isLiked = novelService.likeNovel(userId, slug);
         return ResponseEntity.ok(isLiked);

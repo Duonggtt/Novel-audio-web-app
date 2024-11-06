@@ -3,13 +3,15 @@ package com.spring3.oauth.jwt.services.impl;
 import com.spring3.oauth.jwt.entity.Chapter;
 import com.spring3.oauth.jwt.entity.Novel;
 import com.spring3.oauth.jwt.exception.NotFoundException;
-import com.spring3.oauth.jwt.models.dtos.ChapterResponseDTO;
+import com.spring3.oauth.jwt.models.dtos.*;
 import com.spring3.oauth.jwt.models.request.UpsertChapterRequest;
 import com.spring3.oauth.jwt.repositories.ChapterRepository;
 import com.spring3.oauth.jwt.repositories.NovelRepository;
 import com.spring3.oauth.jwt.services.ChapterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,22 @@ public class ChapterServiceImpl implements ChapterService {
             .stream()
             .map(this::convertToDTO)
             .toList();
+    }
+
+    @Override
+    public PagedChapterResponseDTO getAllChapterInNovelBySlug(String slug, Pageable pageable) {
+        Page<Chapter> chapters = chapterRepository.findAllByNovelSlugPage(slug, pageable);
+        if(chapters.isEmpty()) {
+            throw new NotFoundException("Chapter not found in novel with slug : " + slug);
+        }
+        // Mapping từ Chapter sang ChapterResponseDTO
+        List<ChapterResponseDTO> chapterDTOs = chapters.stream()
+            .map(this::convertToDTO)
+            .toList();
+
+        // Tạo đối tượng PaginationDTO
+        PaginationDTO pagination = new PaginationDTO(chapters.getNumber(), chapters.getSize(), chapters.getTotalElements());
+        return new PagedChapterResponseDTO(chapterDTOs, pagination);
     }
 
     @Override

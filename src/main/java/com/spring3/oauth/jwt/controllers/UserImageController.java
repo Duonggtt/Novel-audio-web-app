@@ -13,7 +13,7 @@ import java.io.IOException;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
-@RequestMapping("/api/images")
+@RequestMapping("/api/v1/images")
 public class UserImageController {
     private final UserImageServiceImpl imageService;
 

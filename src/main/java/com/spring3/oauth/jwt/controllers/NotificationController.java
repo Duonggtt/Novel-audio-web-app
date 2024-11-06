@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/v1/notifications")
 public class NotificationController {
     private final NotificationServiceImpl notificationService;
 

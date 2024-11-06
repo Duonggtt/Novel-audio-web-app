@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"})
-@RequestMapping("/api/audio-files")
+@RequestMapping("/api/v1/audio-files")
 public class AudioFileController {
 
     private final AudioFileServiceImpl audioFileService;

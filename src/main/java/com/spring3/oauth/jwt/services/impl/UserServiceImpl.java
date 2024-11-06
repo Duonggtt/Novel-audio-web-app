@@ -3,6 +3,8 @@ package com.spring3.oauth.jwt.services.impl;
 import com.spring3.oauth.jwt.entity.*;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
+import com.spring3.oauth.jwt.models.dtos.TopReadResponseDTO;
+import com.spring3.oauth.jwt.models.dtos.TopScoreResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.UserResponseDTO;
 import com.spring3.oauth.jwt.models.request.ForgotPassRequest;
 import com.spring3.oauth.jwt.models.request.GenresSelectedRequest;
@@ -125,6 +127,7 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         int newCount = user.getChapterReadCount() + 1;
         user.setChapterReadCount(newCount);
+        user.setPoint(user.getPoint() + 3);
         List<Tier> tierList = tierRepository.findAll();
         for (Tier value : tierList) {
             if (newCount == value.getReadCountRequired()) {
@@ -204,6 +207,7 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(LocalDateTime.now());
         user.setDob(null);
         user.setChapterReadCount(0);
+        user.setPoint(1);
         user.setSelectedGenres(null);
         user.setHobbies(null);
         if(userRequest.getId() != null){
@@ -220,6 +224,7 @@ public class UserServiceImpl implements UserService {
                 oldUser.setUpdatedAt(LocalDateTime.now());
                 oldUser.setDob(null);
                 oldUser.setChapterReadCount(user.getChapterReadCount());
+                oldUser.setPoint(user.getPoint());
                 oldUser.setSelectedGenres(null);
                 oldUser.setHobbies(null);
                 savedUser = userRepository.save(oldUser);
@@ -287,6 +292,56 @@ public class UserServiceImpl implements UserService {
         return convertToDTO(user);
     }
 
+    @Override
+    public List<TopReadResponseDTO> getTopRead() {
+        List<User> topReads = userRepository.findFifthUsersReadingTheMost();
+        if(topReads.isEmpty()) {
+            throw new NotFoundException("No user found..!!");
+        }
+        return topReads.stream()
+            .map(this::convertToTopReadDto)
+            .toList();
+    }
+
+    @Override
+    public List<TopScoreResponseDTO> getTopPoint() {
+        List<User> topReads = userRepository.findFifthUsersReadingTheMost();
+        if(topReads.isEmpty()) {
+            throw new NotFoundException("No user found..!!");
+        }
+        return topReads.stream()
+            .map(this::convertToTopScoreDto)
+            .toList();
+    }
+
+    TopScoreResponseDTO convertToTopScoreDto(User user) {
+        TopScoreResponseDTO dto = new TopScoreResponseDTO();
+        Tier tier = user.getTier();
+        dto.setUserId(user.getId());
+        dto.setImagePath(user.getImagePath());
+        dto.setFullName(user.getFullName());
+        dto.setPoint(user.getPoint());
+        if(tier == null) {
+            dto.setTierName("No tier");
+        }else
+            dto.setTierName(tier.getName());
+        return dto;
+    }
+
+    TopReadResponseDTO convertToTopReadDto(User user) {
+        TopReadResponseDTO dto = new TopReadResponseDTO();
+        Tier tier = user.getTier();
+        dto.setUserId(user.getId());
+        dto.setImagePath(user.getImagePath());
+        dto.setFullName(user.getFullName());
+        dto.setChapterReadCount(user.getChapterReadCount());
+        if(tier == null) {
+            dto.setTierName("No tier");
+        }else
+            dto.setTierName(tier.getName());
+        return dto;
+    }
+
     UserResponseDTO convertToDTO(User user) {
         UserResponseDTO userResponseDTO = new UserResponseDTO();
         userResponseDTO.setId(user.getId());
@@ -294,6 +349,7 @@ public class UserServiceImpl implements UserService {
         userResponseDTO.setUsername(user.getUsername());
         userResponseDTO.setEmail(user.getEmail());
         userResponseDTO.setChapterReadCount(user.getChapterReadCount());
+        userResponseDTO.setPoint(user.getPoint());
         userResponseDTO.setAccountStatus(String.valueOf(user.getStatus()));
         if(user.getTier() == null){
             userResponseDTO.setTierName("No tier");
