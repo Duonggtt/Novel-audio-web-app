@@ -32,4 +32,5 @@ public interface UserService {
     UserResponseDTO updateSelectedGenres(Long userId, GenresSelectedRequest request);
     List<TopReadResponseDTO> getTopRead();
     List<TopScoreResponseDTO> getTopPoint();
+    long getUserIdByUsername(String username);
 }

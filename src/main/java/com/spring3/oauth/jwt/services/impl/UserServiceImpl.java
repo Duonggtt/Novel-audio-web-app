@@ -314,6 +314,15 @@ public class UserServiceImpl implements UserService {
             .toList();
     }
 
+    @Override
+    public long getUserIdByUsername(String username) {
+        long userId = userRepository.findByUsername(username).getId();
+        if(userRepository.findByUsername(username) == null) {
+            throw new NotFoundException("User not found with username: " + username);
+        }
+        return userId;
+    }
+
     TopScoreResponseDTO convertToTopScoreDto(User user) {
         TopScoreResponseDTO dto = new TopScoreResponseDTO();
         Tier tier = user.getTier();

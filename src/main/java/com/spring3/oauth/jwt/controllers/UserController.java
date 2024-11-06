@@ -136,10 +136,12 @@ public class UserController {
         if(authentication.isAuthenticated()){
             boolean isAdmin = userService.isAdmin(authRequestDTO.getUsername());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequestDTO.getUsername());
+            long userId = userService.getUserIdByUsername(authRequestDTO.getUsername());
             return JwtResponseDTO.builder()
                 .accessToken(jwtService.GenerateToken(authRequestDTO.getUsername()))
                 .token(refreshToken.getToken())
                 .isAdmin(isAdmin)
+                .userId(userId)
                 .build();
         } else {
             throw new UsernameNotFoundException("Invalid user request..!!");
