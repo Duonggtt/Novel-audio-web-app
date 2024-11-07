@@ -9,8 +9,10 @@ import com.spring3.oauth.jwt.repositories.CommentRepository;
 import com.spring3.oauth.jwt.repositories.NovelRepository;
 import com.spring3.oauth.jwt.repositories.UserRepository;
 import com.spring3.oauth.jwt.services.CommentService;
+import com.spring3.oauth.jwt.services.NotificationSenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,9 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final NovelRepository novelRepository;
     private final NotificationServiceImpl notificationService;
+
+    @Autowired
+    private NotificationSenderService notificationSenderService;
 
     @Override
     public CommentResponseDTO saveComment(CreateCommentRequest request) {
@@ -88,6 +93,7 @@ public class CommentServiceImpl implements CommentService {
             String taggedUsername = matcher.group(1);
             userRepository.getUserByUsername(taggedUsername).ifPresent(taggedUser -> {
                 notificationService.sendTagNotification(taggedUser.getId(), comment.getId(), "Bạn được nhắc đến trong một bình luận.");
+                notificationSenderService.sendNotificationToUser(taggedUser.getId(), "Bạn được nhắc đến trong một bình luận.");
             });
         }
     }

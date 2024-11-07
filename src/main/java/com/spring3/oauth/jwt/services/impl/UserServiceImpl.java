@@ -273,6 +273,7 @@ public class UserServiceImpl implements UserService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setDob(request.getDob());
+        user.setUpdatedAt(LocalDateTime.now());
         user.setHobbies(hobbies);
         userRepository.save(user);
         return convertToDTO(user);

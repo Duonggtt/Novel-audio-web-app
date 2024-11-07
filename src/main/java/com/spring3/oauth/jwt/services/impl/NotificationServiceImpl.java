@@ -4,6 +4,7 @@ import com.spring3.oauth.jwt.entity.Comment;
 import com.spring3.oauth.jwt.entity.Notification;
 import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.exception.NotFoundException;
+import com.spring3.oauth.jwt.models.dtos.NotificationResponseDTO;
 import com.spring3.oauth.jwt.repositories.CommentRepository;
 import com.spring3.oauth.jwt.repositories.NotificationRepository;
 import com.spring3.oauth.jwt.repositories.UserRepository;
@@ -44,8 +45,11 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notification> getUnreadNotifications(long userId) {
-        return notificationRepository.findByUserIdAndIsReadFalse(userId);
+    public List<NotificationResponseDTO> getUnreadNotifications(long userId) {
+        List<Notification> notiList = notificationRepository.findByUserIdAndIsReadFalse(userId);
+        return notiList.stream()
+            .map(this::convertToDTO)
+            .toList();
     }
 
     @Override
@@ -57,10 +61,24 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notification> getNotifications(long userId) {
+    public List<NotificationResponseDTO> getNotifications(long userId) {
         List<Notification> notiList = notificationRepository.findByUserId(userId);
         if(notiList.isEmpty())
             throw new NotFoundException("No notification found");
-        return notiList;
+        return notiList.stream()
+            .map(this::convertToDTO)
+            .toList();
+    }
+
+    private NotificationResponseDTO convertToDTO(Notification notification) {
+        return NotificationResponseDTO.builder()
+            .id(notification.getId())
+            .userId(notification.getUser().getId())
+            .fullName(notification.getUser().getFullName())
+            .commentId(notification.getComment().getId())
+            .message(notification.getMessage())
+            .createdAt(String.valueOf(notification.getCreatedAt()))
+            .isRead(notification.getIsRead())
+            .build();
     }
 }
