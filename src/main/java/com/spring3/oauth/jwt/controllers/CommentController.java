@@ -23,7 +23,7 @@ public class CommentController {
         return ResponseEntity.ok(commentService.saveComment(request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteComment(@PathVariable Integer id) {
         commentService.deleteComment(id);
         return ResponseEntity.ok("Comment deleted successfully");

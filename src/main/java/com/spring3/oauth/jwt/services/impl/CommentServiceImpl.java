@@ -1,11 +1,13 @@
 package com.spring3.oauth.jwt.services.impl;
 
 import com.spring3.oauth.jwt.entity.Comment;
+import com.spring3.oauth.jwt.entity.Notification;
 import com.spring3.oauth.jwt.entity.Novel;
 import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.CommentResponseDTO;
 import com.spring3.oauth.jwt.models.request.CreateCommentRequest;
 import com.spring3.oauth.jwt.repositories.CommentRepository;
+import com.spring3.oauth.jwt.repositories.NotificationRepository;
 import com.spring3.oauth.jwt.repositories.NovelRepository;
 import com.spring3.oauth.jwt.repositories.UserRepository;
 import com.spring3.oauth.jwt.services.CommentService;
@@ -15,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -30,10 +33,14 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final NovelRepository novelRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationServiceImpl notificationService;
 
     @Autowired
     private NotificationSenderService notificationSenderService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     public CommentResponseDTO saveComment(CreateCommentRequest request) {
@@ -99,11 +106,30 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Integer id) {
         Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+            .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        //Xóa tất cả các Notification liên quan đến Comment trước
+        List<Notification> notifications = notificationRepository.findAllByComment_Id(id);
+        if (!notifications.isEmpty()) {
+            notificationRepository.deleteAll(notifications);
+            entityManager.flush();
+        }
+
+        //Xóa các Comment con nếu có
+        List<Comment> childComments = commentRepository.findAllByParent_Id(id);
+        if (!childComments.isEmpty()) {
+            commentRepository.deleteAll(childComments);
+            entityManager.flush();
+        }
+
+        //Xóa Comment chính
         commentRepository.delete(comment);
+        entityManager.flush();
     }
+
 
     @Override
     public List<CommentResponseDTO> getAllCommentsInNovel(String slug) {

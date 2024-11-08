@@ -2,6 +2,7 @@ package com.spring3.oauth.jwt.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import jakarta.persistence.CascadeType;
 
 import java.time.LocalDateTime;
 
@@ -33,7 +34,7 @@ public class Comment {
     private Novel novel;
 
     // Nhận biết binh luận nào là cha nào là con
-    @ManyToOne
-    @JoinColumn(name = "parent_id", nullable = true) // Bình luận gốc sẽ có parent_id là null
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "parent_id", nullable = true)// Bình luận gốc sẽ có parent_id là null
     private Comment parent;
 }
