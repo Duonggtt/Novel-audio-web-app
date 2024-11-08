@@ -108,26 +108,32 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(Integer id) {
+        // Tìm comment cần xóa
         Comment comment = commentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-        //Xóa tất cả các Notification liên quan đến Comment trước
+        // Nếu comment là cha, xóa các comment con trước
+        List<Comment> childComments = commentRepository.findAllByParent_Id(id);
+        if (!childComments.isEmpty()) {
+            // Xóa tất cả các Notification liên quan đến các comment con
+            for (Comment childComment : childComments) {
+                List<Notification> childNotifications = notificationRepository.findAllByComment_Id(childComment.getId());
+                if (!childNotifications.isEmpty()) {
+                    notificationRepository.deleteAll(childNotifications);
+                }
+            }
+            // Xóa tất cả các comment con
+            commentRepository.deleteAll(childComments);
+        }
+
+        // Xóa tất cả Notification liên quan đến comment cha
         List<Notification> notifications = notificationRepository.findAllByComment_Id(id);
         if (!notifications.isEmpty()) {
             notificationRepository.deleteAll(notifications);
-            entityManager.flush();
         }
 
-        //Xóa các Comment con nếu có
-        List<Comment> childComments = commentRepository.findAllByParent_Id(id);
-        if (!childComments.isEmpty()) {
-            commentRepository.deleteAll(childComments);
-            entityManager.flush();
-        }
-
-        //Xóa Comment chính
+        // Cuối cùng, xóa comment cha
         commentRepository.delete(comment);
-        entityManager.flush();
     }
 
 

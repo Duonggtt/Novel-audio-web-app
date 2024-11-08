@@ -34,7 +34,7 @@ public class Comment {
     private Novel novel;
 
     // Nhận biết binh luận nào là cha nào là con
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "parent_id", nullable = true)// Bình luận gốc sẽ có parent_id là null
     private Comment parent;
 }
