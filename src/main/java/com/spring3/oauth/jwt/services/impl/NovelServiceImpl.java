@@ -1,9 +1,6 @@
 package com.spring3.oauth.jwt.services.impl;
 
-import com.spring3.oauth.jwt.entity.Genre;
-import com.spring3.oauth.jwt.entity.Novel;
-import com.spring3.oauth.jwt.entity.User;
-import com.spring3.oauth.jwt.entity.UserLike;
+import com.spring3.oauth.jwt.entity.*;
 import com.spring3.oauth.jwt.exception.NotFoundException;
 import com.spring3.oauth.jwt.models.dtos.NovelDetailResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
@@ -19,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -35,9 +33,10 @@ public class NovelServiceImpl implements NovelService {
     private final NovelRepository novelRepository;
     private final AuthorRepository authorRepository;
     private final GenreRepository genreRepository;
-    private final ChapterRepository chapterRepository;
     private final UserRepository userRepository;
     private final UserLikeRepository userLikeRepository;
+    private final RateRepository rateRepository;
+    private final UserRateRepository userRateRepository;
 
 
     @Override
@@ -275,6 +274,13 @@ public class NovelServiceImpl implements NovelService {
         novel.setAuthor(authorRepository.findById(request.getAuthorId())
             .orElseThrow(() -> new NotFoundException("Author not found with id " + request.getAuthorId())));
         novel.setGenres(genreRepository.findAllById(request.getGenreIds()));
+
+        Rate rate = new Rate();
+        rate.setRate(BigDecimal.ZERO);
+        rate.setRateQuantity(0);
+        rate.setNovel(novel);
+        rateRepository.save(rate);
+
         return convertToDto(novelRepository.save(novel));
 
     }
@@ -345,6 +351,11 @@ public class NovelServiceImpl implements NovelService {
         boolean isLiked = userLikeRepository.findByUser_IdAndNovel_Slug(userId, novel.getSlug())
             .isPresent();
 
+        // Lấy thông tin rate của user nếu có
+        BigDecimal userRate = userRateRepository.findByUser_IdAndNovel_Slug(userId, novel.getSlug())
+            .map(UserRate::getRatePoint)
+            .orElse(null);
+
         dto.setTitle(novel.getTitle());
         dto.setSlug(novel.getSlug());
         dto.setDescription(novel.getDescription());
@@ -357,6 +368,7 @@ public class NovelServiceImpl implements NovelService {
         dto.setAverageRatings(novel.getAverageRatings());
         dto.setLikeCounts(novel.getLikeCounts());
         dto.setLiked(isLiked);
+        dto.setUserRate(userRate);
         if(novel.getAuthor() == null) {
             dto.setAuthorName(null);
         }else {

@@ -1,11 +1,12 @@
 package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.models.request.UpdateRatePointRequest;
-import com.spring3.oauth.jwt.models.request.UpsertRateRequest;
 import com.spring3.oauth.jwt.services.impl.RateServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,25 +16,16 @@ public class RateController {
 
     private final RateServiceImpl rateService;
 
-    @GetMapping("/in-novel/{novelId}")
-    public ResponseEntity<?> getRateByNovelId(@PathVariable Integer novelId) {
-        return ResponseEntity.ok(rateService.getRatePointByNovelId(novelId));
+    @GetMapping("/in-novel/{slug}")
+    public ResponseEntity<?> getRateByNovelSlug(@PathVariable String slug, @RequestParam long userId) {
+        return ResponseEntity.ok(rateService.getRatePointByNovelSlug(slug, userId));
     }
 
-    @GetMapping("/delete/{id}")
-    public ResponseEntity<?> deleteRate(@PathVariable Integer id) {
-        rateService.deleteRatePoint(id);
-        return ResponseEntity.ok("Delete rate success");
-    }
-
-    @PutMapping("/set-rate/{id}")
-    public ResponseEntity<?> updateRate(@PathVariable Integer id, @RequestBody UpdateRatePointRequest request) {
-        return ResponseEntity.ok(rateService.updateRatePoint(id, request));
-    }
-
-    @PostMapping("/create")
-    public ResponseEntity<?> createRate(@RequestBody UpsertRateRequest request) {
-        return ResponseEntity.ok(rateService.createRatePoint(request));
+    @PutMapping("/set-rate/{slug}")
+    public ResponseEntity<?> updateRate(@PathVariable String slug,
+                                        @RequestBody UpdateRatePointRequest request,
+                                        @RequestParam long userId) {
+        return ResponseEntity.ok(rateService.updateRatePoint(slug, request, userId));
     }
 
 }

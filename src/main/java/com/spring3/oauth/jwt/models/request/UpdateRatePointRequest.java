@@ -6,11 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public class UpdateRatePointRequest {
-    private BigDecimal rate;
-    private Integer novelId;
+    private BigDecimal ratePoint;
 }

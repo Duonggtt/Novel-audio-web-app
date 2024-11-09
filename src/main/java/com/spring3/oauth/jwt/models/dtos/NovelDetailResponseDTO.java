@@ -28,4 +28,5 @@ public class NovelDetailResponseDTO {
     private String authorName;
     private List<String> genreNames;
     private boolean isLiked;
+    private BigDecimal userRate;
 }

@@ -15,5 +15,6 @@ public class RateResponseDTO {
     private Integer id;
     private int rateQuantity;
     private BigDecimal rate;
-    private Integer novelId;
+    private String slug;
+    private BigDecimal userRate;
 }
