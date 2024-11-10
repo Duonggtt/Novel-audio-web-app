@@ -32,7 +32,10 @@ public class Task {
 
     @Column(name = "required_progress")
     private int requiredProgress;
-
     // For example: READ_CHAPTERS might need 5 chapters to complete
 
+    // Helper method to get formatted description
+    public String getFormattedDescription() {
+        return type.getFormattedDescription(requiredProgress);
+    }
 }
