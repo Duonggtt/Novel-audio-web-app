@@ -1,6 +1,7 @@
 package com.spring3.oauth.jwt.entity;
 
 
+import com.spring3.oauth.jwt.entity.enums.TaskFrequencyEnum;
 import com.spring3.oauth.jwt.entity.enums.TaskTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,13 +17,22 @@ import lombok.*;
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
     private TaskTypeEnum type;
+
+    @Enumerated(EnumType.STRING)
+    private TaskFrequencyEnum frequency;
 
     @Column(name = "reward_coins")
     private int rewardCoins;
+
+    @Column(name = "required_progress")
+    private int requiredProgress;
+
+    // For example: READ_CHAPTERS might need 5 chapters to complete
 
 }
