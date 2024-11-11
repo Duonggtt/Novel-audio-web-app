@@ -58,6 +58,7 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     @PostMapping("/send-update-role-email")
     public ResponseEntity<String> sendAuthorRequest(
             @RequestParam String fromEmail,
