@@ -1,24 +1,32 @@
 package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.entity.RefreshToken;
+import com.spring3.oauth.jwt.entity.Role;
 import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.*;
 import com.spring3.oauth.jwt.models.request.*;
 import com.spring3.oauth.jwt.models.response.UserResponse;
+import com.spring3.oauth.jwt.repositories.RoleRepository;
+import com.spring3.oauth.jwt.repositories.UserRepository;
+import com.spring3.oauth.jwt.services.EmailService;
 import com.spring3.oauth.jwt.services.JwtService;
 import com.spring3.oauth.jwt.services.RefreshTokenService;
 import com.spring3.oauth.jwt.services.UserService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,6 +36,10 @@ public class UserController {
     @Autowired
     UserService userService;
 
+    private final EmailService emailService;
+    private final RoleRepository roleRepository;
+    private final RestTemplate restTemplate;
+
     @Autowired
     private JwtService jwtService;
 
@@ -36,6 +48,102 @@ public class UserController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    private final UserRepository userRepository;
+
+    public UserController(EmailService emailService, RoleRepository roleRepository, RestTemplate restTemplate, UserRepository userRepository) {
+        this.emailService = emailService;
+        this.roleRepository = roleRepository;
+        this.restTemplate = restTemplate;
+        this.userRepository = userRepository;
+    }
+
+    @PostMapping("/send-update-role-email")
+    public ResponseEntity<String> sendAuthorRequest(
+            @RequestParam String fromEmail,
+            @RequestParam long userId,
+            @RequestParam String username) {
+        try {
+            emailService.sendForAcceptAuthorRequest(fromEmail, userId, username);
+            return ResponseEntity.ok("Author request email sent successfully.");
+        } catch (MessagingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send author request email.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/mail-role/accept")
+    public ResponseEntity<String> acceptAuthorRequest(@RequestParam long userId, @RequestParam String username) throws MessagingException {
+        // Update user role here
+        User user = userRepository.findByUsernameAndId(username, userId);
+        if (user != null) {
+            Set<Role> roles = roleRepository.findAllByName("ROLE_AUTHOR");
+            user.setRoles(roles);
+            userRepository.save(user);
+
+            // Send acceptance notification
+            emailService.sendNotificationToUser(user.getEmail(), "Accepted", "You have been accepted as an author.");
+
+            // Return HTML response indicating success
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(generateHtmlResponse("Congratulations!", "You have been accepted as an author."));
+        }
+        // Return HTML response indicating failure
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.TEXT_HTML)
+                .body(generateHtmlResponse("User Not Found", "The user could not be found. Please try again."));
+    }
+
+    @GetMapping("/mail-role/decline")
+    public ResponseEntity<String> declineAuthorRequest(@RequestParam long userId, @RequestParam String username) throws MessagingException {
+        User user = userRepository.findByUsernameAndId(username, userId);
+        if (user != null) {
+            // Send rejection notification
+            emailService.sendNotificationToUser(user.getEmail(), "Declined", "Your request to be an author has been declined.");
+
+            // Return HTML response indicating rejection
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(generateHtmlResponse("Request Declined", "Your request to be an author has been declined."));
+        }
+        // Return HTML response indicating failure
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.TEXT_HTML)
+                .body(generateHtmlResponse("User Not Found", "The user could not be found. Please try again."));
+    }
+
+    @GetMapping("/mail-role/acceptRedirect")
+    public ResponseEntity<String> acceptAuthorRequestRedirect(@RequestParam long userId, @RequestParam String username) {
+        // Gọi POST nội bộ đến endpoint chấp nhận
+        return sendInternalGetRequest("/api/v1/mail-role/accept", userId, username);
+    }
+
+    @GetMapping("/mail-role/declineRedirect")
+    public ResponseEntity<String> declineAuthorRequestRedirect(@RequestParam long userId, @RequestParam String username) {
+        // Gọi POST nội bộ đến endpoint từ chối
+        return sendInternalGetRequest("/api/v1/mail-role/decline", userId, username);
+    }
+
+    // Hàm nội bộ để gửi POST request
+    private ResponseEntity<String> sendInternalGetRequest(String url, long userId, String username) {
+        try {
+            String fullUrl = "http://localhost:9898" + url + "?userId=" + userId + "&username=" + username;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+            // Send GET request
+            return restTemplate.exchange(fullUrl, HttpMethod.GET, requestEntity, String.class);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the error for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to process request: " + e.getMessage());
+        }
+    }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPassRequest forgotPassRequest) {
@@ -174,5 +282,28 @@ public class UserController {
     @GetMapping("/bxh/top-point")
     public ResponseEntity<?> getTopPoint() {
         return ResponseEntity.ok(userService.getTopPoint());
+    }
+
+    private String generateHtmlResponse(String title, String message) {
+        String logoUrl = "http://14.225.207.58:3000/photo/dd08665ea32a0a8ee80f.png";
+
+        return "<html>" +
+                "<head>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; background-color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }" +
+                ".container { text-align: center; padding: 20px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); background-color: #ffffff; max-width: 400px; width: 100%; }" +
+                "img { max-width: 100px; margin-bottom: 20px; }" +
+                "h1 { font-size: 24px; color: #333; margin-bottom: 10px; }" +
+                "p { font-size: 18px; color: #555; margin-top: 0; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<img src='" + logoUrl + "' alt='Logo'>" +
+                "<h1>" + title + "</h1>" +
+                "<p>" + message + "</p>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
     }
 }
