@@ -6,6 +6,7 @@ import com.spring3.oauth.jwt.models.dtos.NovelDetailResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PagedResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PaginationDTO;
+import com.spring3.oauth.jwt.models.request.UpdateNovelRequest;
 import com.spring3.oauth.jwt.models.request.UpsertNovelRequest;
 import com.spring3.oauth.jwt.repositories.*;
 import com.spring3.oauth.jwt.services.NovelService;
@@ -160,6 +161,20 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
+    public PagedResponseDTO findAllByAuthorAuthName(String authorName, Pageable pageable) {
+        Page<Novel> novels = novelRepository.findAllByAuthorAuthName(authorName, pageable);
+        if(novels.isEmpty()) {
+            throw new NotFoundException("Novel not found with author name " + authorName);
+        }
+        // Mapping từ Novel sang NovelResponseDTO
+        List<NovelResponseDTO> novelDTOs = novels.stream()
+                .map(this::convertToDto)
+                .toList();
+        PaginationDTO pagination = new PaginationDTO(novels.getNumber(), novels.getSize(), novels.getTotalElements());
+        return new PagedResponseDTO(novelDTOs, pagination);
+    }
+
+    @Override
     public PagedResponseDTO findAllByAuthorId(Integer authorId, Pageable pageable) {
         Page<Novel> novels = novelRepository.findAllByAuthor_Id(authorId, pageable);
         if(novels.isEmpty()) {
@@ -259,6 +274,15 @@ public class NovelServiceImpl implements NovelService {
 
     @Override
     public NovelResponseDTO saveNovel(UpsertNovelRequest request) {
+        Novel isExist = novelRepository.findBySlug(request.getSlug());
+        if(isExist != null) {
+            throw new NotFoundException("Novel already exists with slug " + request.getSlug());
+        }
+
+        Novel isExist2 = novelRepository.findByTitle(request.getTitle());
+        if(isExist2 != null) {
+            throw new NotFoundException("Novel already exists with title " + request.getTitle());
+        }
         Novel novel = new Novel();
         novel.setTitle(request.getTitle());
         novel.setSlug(request.getSlug());
@@ -286,21 +310,20 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
-    public NovelResponseDTO updateNovel(String novelSlug, UpsertNovelRequest request) {
+    public NovelResponseDTO updateNovel(String novelSlug, UpdateNovelRequest request) {
         Novel novel = novelRepository.findBySlug(novelSlug);
         if(novel == null) {
             throw new NotFoundException("Novel not found with slug: " + novelSlug);
         }
+        Novel isExist = novelRepository.findByTitle(request.getTitle());
+        if(isExist != null) {
+            throw new NotFoundException("Novel already exists with title " + request.getTitle());
+        }
         novel.setTitle(request.getTitle());
-        novel.setSlug(request.getSlug());
         novel.setDescription(request.getDescription());
         novel.setStatus(request.getStatus());
         novel.setThumbnailImageUrl(request.getThumbnailImageUrl());
         novel.setClosed(request.isClosed());
-        novel.setReadCounts(request.getReadCounts());
-        novel.setTotalChapters(request.getTotalChapters());
-        novel.setAverageRatings(request.getAverageRatings());
-        novel.setLikeCounts(request.getLikeCounts());
         novel.setAuthor(authorRepository.findById(request.getAuthorId())
             .orElseThrow(() -> new NotFoundException("Author not found with id " + request.getAuthorId())));
         novel.setGenres(genreRepository.findAllById(request.getGenreIds()));

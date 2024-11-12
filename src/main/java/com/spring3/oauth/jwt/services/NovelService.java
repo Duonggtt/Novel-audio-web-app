@@ -5,6 +5,7 @@ import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.NovelDetailResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PagedResponseDTO;
+import com.spring3.oauth.jwt.models.request.UpdateNovelRequest;
 import com.spring3.oauth.jwt.models.request.UpsertNovelRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +16,7 @@ public interface NovelService {
     List<NovelResponseDTO> getAllNovelDtos();
     NovelResponseDTO getNovelById(Integer id);
     NovelResponseDTO saveNovel(UpsertNovelRequest request);
-    NovelResponseDTO updateNovel(String novelSlug, UpsertNovelRequest request);
+    NovelResponseDTO updateNovel(String novelSlug, UpdateNovelRequest request);
     void deleteNovel(Integer id);
     PagedResponseDTO getAllTrendingNovels(Pageable pageable);
     PagedResponseDTO getAllTopNovels(Pageable pageable);
@@ -32,6 +33,6 @@ public interface NovelService {
     boolean isNovelLikedByUser(long userId, String novelSlug);
     boolean likeNovel( long userId, String slug);
     List<String> getLikedNovelSlugsByUser(Long userId);
-
+    PagedResponseDTO findAllByAuthorAuthName(String authorName, Pageable pageable);
     List<String> getLikedNovelIdsByUserForSpecificNovels(Long userId, List<Integer> novelIds);
 }

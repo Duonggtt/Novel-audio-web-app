@@ -3,6 +3,7 @@ package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
+import com.spring3.oauth.jwt.models.request.UpdateNovelRequest;
 import com.spring3.oauth.jwt.models.request.UpsertNovelRequest;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
 import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -74,14 +76,15 @@ public class NovelController {
     }
 
     @PostMapping("/save")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> saveNovel(@Valid @RequestBody UpsertNovelRequest request) {
         NovelResponseDTO novel = novelService.saveNovel(request);
         return new ResponseEntity<>(novel, HttpStatus.CREATED);
     }
 
-    
     @PutMapping("/update/{slug}")
-    public ResponseEntity<?> updateNovel(@PathVariable String slug, @Valid @RequestBody UpsertNovelRequest request) {
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> updateNovel(@PathVariable String slug, @Valid @RequestBody UpdateNovelRequest request) {
         NovelResponseDTO novel = novelService.updateNovel(slug, request);
         return new ResponseEntity<>(novel, HttpStatus.OK);
     }
@@ -101,6 +104,13 @@ public class NovelController {
     public ResponseEntity<?> searchNovelsByAuthorName(@RequestParam String authorName, Pageable pageable) {
         return ResponseEntity.ok(novelService.findAllByAuthorName(authorName, pageable));
     }
+
+    @GetMapping("/auth/my-novels")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> searchNovelsByAuthorAuthName(@RequestParam String authorName, Pageable pageable) {
+        return ResponseEntity.ok(novelService.findAllByAuthorAuthName(authorName, pageable));
+    }
+
 
     @GetMapping("/search/by-author-id/{authorId}")
     public ResponseEntity<?> searchNovelsByAuthorId(@PathVariable Integer authorId, Pageable pageable) {
