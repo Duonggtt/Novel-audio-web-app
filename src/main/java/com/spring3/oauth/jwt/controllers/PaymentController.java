@@ -17,9 +17,9 @@ public class PaymentController {
     @Autowired
     private VNPayService vnPayService;
 
-    @PostMapping("/create")
-    public ResponseEntity<String> createPayment(@RequestBody PaymentRequest request) {
-        String paymentUrl = vnPayService.createPayment(request);
+    @PostMapping("/create/{userId}")
+    public ResponseEntity<String> createPayment(@RequestBody PaymentRequest request, @PathVariable long userId) {
+        String paymentUrl = vnPayService.createPayment(request, userId);
         return ResponseEntity.ok(paymentUrl);
     }
 

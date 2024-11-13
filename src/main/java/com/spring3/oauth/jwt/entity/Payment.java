@@ -13,9 +13,9 @@ import lombok.*;
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
-    private Long amount;
+    private long amount;
 
     @Column(name = "transaction_no")
     private String transactionNo;
@@ -31,4 +31,8 @@ public class Payment {
 
     @Column(name = "response_code")
     private String responseCode;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

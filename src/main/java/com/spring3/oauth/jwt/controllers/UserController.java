@@ -256,13 +256,13 @@ public class UserController {
     public JwtResponseDTO AuthenticateAndGetToken(@RequestBody AuthRequestDTO authRequestDTO){
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequestDTO.getUsername(), authRequestDTO.getPassword()));
         if(authentication.isAuthenticated()){
-            boolean isAdmin = userService.isAdmin(authRequestDTO.getUsername());
+            String role = userService.getRole(authRequestDTO.getUsername());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequestDTO.getUsername());
             long userId = userService.getUserIdByUsername(authRequestDTO.getUsername());
             return JwtResponseDTO.builder()
                 .accessToken(jwtService.GenerateToken(authRequestDTO.getUsername()))
                 .token(refreshToken.getToken())
-                .isAdmin(isAdmin)
+                .role(role)
                 .userId(userId)
                 .build();
         } else {

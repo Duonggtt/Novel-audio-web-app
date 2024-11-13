@@ -1,9 +1,11 @@
 package com.spring3.oauth.jwt.services;
 
 import com.spring3.oauth.jwt.entity.Payment;
+import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.request.PaymentRequest;
 import com.spring3.oauth.jwt.models.response.PaymentResponse;
 import com.spring3.oauth.jwt.repositories.PaymentRepository;
+import com.spring3.oauth.jwt.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,7 +37,10 @@ public class VNPayService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    public String createPayment(PaymentRequest request) {
+    @Autowired
+    private UserRepository userRepository;
+
+    public String createPayment(PaymentRequest request, long userId) {
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");

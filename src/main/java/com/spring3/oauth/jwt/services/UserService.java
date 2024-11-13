@@ -33,4 +33,5 @@ public interface UserService {
     List<TopReadResponseDTO> getTopRead();
     List<TopScoreResponseDTO> getTopPoint();
     long getUserIdByUsername(String username);
+    String getRole(String username);
 }

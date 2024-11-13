@@ -14,5 +14,5 @@ public class JwtResponseDTO {
     private String accessToken;
     private String token;
     private long userId;
-    private boolean isAdmin;
+    private String role;
 }

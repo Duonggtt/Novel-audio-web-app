@@ -151,6 +151,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public String getRole(String username) {
+        User user = userRepository.findByUsername(username);
+        return user.getRoles().stream().findFirst().get().getName();
+    }
+
+    @Override
     public boolean isAdmin(String username) {
         User user = userRepository.findByUsername(username);
         String role = null;
