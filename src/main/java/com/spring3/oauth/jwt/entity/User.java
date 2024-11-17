@@ -15,7 +15,6 @@ import static jakarta.persistence.FetchType.LAZY;
 
 
 @Entity
-@Data
 @ToString
 @Getter
 @Setter
@@ -39,6 +38,21 @@ public class User {
 
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<>();
+
+    // Những người đang follow user này (nếu user là author)
+    @JsonIgnore
+    @ManyToMany(fetch = LAZY)
+    @JoinTable(
+        name = "user_followers",
+        joinColumns = @JoinColumn(name = "author_id"),
+        inverseJoinColumns = @JoinColumn(name = "follower_id")
+    )
+    private Set<User> followers = new HashSet<>();
+
+    // Những author mà user này đang follow
+    @JsonIgnore
+    @ManyToMany(mappedBy = "followers", fetch = LAZY)
+    private Set<User> following = new HashSet<>();
 
     @Column(name = "account_status")
     private UserStatusEnum status;
@@ -75,4 +89,26 @@ public class User {
 
     @ManyToMany(fetch = LAZY)
     private List<Hobby> hobbies;
+
+    // Helper methods for managing followers
+    public void addFollower(User follower) {
+        followers.add(follower);
+        follower.getFollowing().add(this);
+    }
+
+    public void removeFollower(User follower) {
+        followers.remove(follower);
+        follower.getFollowing().remove(this);
+    }
+
+    // Method to check if user is an author
+    public boolean isAuthor() {
+        return roles.stream()
+            .anyMatch(role -> "ROLE_AUTHOR".equals(role.getName()));
+    }
+
+    // Get follower count
+    public int getFollowerCount() {
+        return followers.size();
+    }
 }

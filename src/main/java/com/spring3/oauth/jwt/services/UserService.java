@@ -1,5 +1,6 @@
 package com.spring3.oauth.jwt.services;
 
+import com.spring3.oauth.jwt.models.dtos.FollowResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TopReadResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TopScoreResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.UserResponseDTO;
@@ -34,4 +35,9 @@ public interface UserService {
     List<TopScoreResponseDTO> getTopPoint();
     long getUserIdByUsername(String username);
     String getRole(String username);
+    void followAuthor(String currentUsername, long authorId);
+    void unfollowAuthor(String currentUsername, long authorId);
+    List<FollowResponseDTO> getAuthorFollowers(long authorId);
+    List<FollowResponseDTO> getUserFollowing(String username);
+    int getFollowerCount(long authorId);
 }

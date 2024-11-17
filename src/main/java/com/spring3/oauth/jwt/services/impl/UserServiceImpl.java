@@ -3,6 +3,7 @@ package com.spring3.oauth.jwt.services.impl;
 import com.spring3.oauth.jwt.entity.*;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
+import com.spring3.oauth.jwt.models.dtos.FollowResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TopReadResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TopScoreResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.UserResponseDTO;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -330,6 +332,81 @@ public class UserServiceImpl implements UserService {
         return userId;
     }
 
+    @Override
+    public void followAuthor(String currentUsername, long authorId) {
+        User currentUser = userRepository.findByUsername(currentUsername);
+        User author = userRepository.findById(authorId)
+            .orElseThrow(() -> new NotFoundException("Author not found with id: " + authorId));
+
+        // Check if user is trying to follow themselves
+        if (currentUser.getId() == authorId) {
+            throw new RuntimeException("Users cannot follow themselves");
+        }
+
+        // Check if target user is an author
+        if (!author.isAuthor()) {
+            throw new RuntimeException("Target user is not an author");
+        }
+
+        // Check if already following
+        if (currentUser.getFollowing().contains(author)) {
+            throw new RuntimeException("Already following this author");
+        }
+
+        author.addFollower(currentUser);
+        userRepository.save(author);
+        userRepository.save(currentUser);
+    }
+
+
+    @Override
+    public void unfollowAuthor(String currentUsername, long authorId) {
+        User currentUser = userRepository.findByUsername(currentUsername);
+        User author = userRepository.findById(authorId)
+            .orElseThrow(() -> new NotFoundException("Author not found with id: " + authorId));
+
+        if (!currentUser.getFollowing().contains(author)) {
+            throw new RuntimeException("Not following this author");
+        }
+
+        author.removeFollower(currentUser);
+        userRepository.save(author);
+        userRepository.save(currentUser);
+    }
+
+    @Override
+    public List<FollowResponseDTO> getAuthorFollowers(long authorId) {
+        User author = userRepository.findById(authorId)
+            .orElseThrow(() -> new NotFoundException("Author not found with id: " + authorId));
+
+        if (!author.isAuthor()) {
+            throw new RuntimeException("User is not an author");
+        }
+
+        return author.getFollowers().stream()
+            .map(this::convertToFollowDTO)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FollowResponseDTO> getUserFollowing(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new NotFoundException("User not found with username: " + username);
+        }
+
+        return user.getFollowing().stream()
+            .map(this::convertToFollowDTO)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public int getFollowerCount(long authorId) {
+        User author = userRepository.findById(authorId)
+            .orElseThrow(() -> new NotFoundException("Author not found with id: " + authorId));
+        return author.getFollowerCount();
+    }
+
     TopScoreResponseDTO convertToTopScoreDto(User user) {
         TopScoreResponseDTO dto = new TopScoreResponseDTO();
         Tier tier = user.getTier();
@@ -341,6 +418,15 @@ public class UserServiceImpl implements UserService {
             dto.setTierName("No tier");
         }else
             dto.setTierName(tier.getName());
+        return dto;
+    }
+
+    private FollowResponseDTO convertToFollowDTO(User user) {
+        FollowResponseDTO dto = new FollowResponseDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setFullName(user.getFullName());
+        dto.setImagePath(user.getImagePath());
         return dto;
     }
 
