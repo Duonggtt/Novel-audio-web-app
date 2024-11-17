@@ -298,6 +298,38 @@ public class UserController {
         return ResponseEntity.ok(userService.getTopPoint());
     }
 
+    @PostMapping("/follow/author")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    public ResponseEntity<?> followAuthor(@RequestParam String currentUsername, @RequestParam long authorId) {
+        userService.followAuthor(currentUsername, authorId);
+        return ResponseEntity.ok("Followed author successfully.");
+    }
+
+    @PostMapping("/unfollow/author")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    public ResponseEntity<?> unfollowAuthor(@RequestParam String currentUsername, @RequestParam long authorId) {
+        userService.unfollowAuthor(currentUsername, authorId);
+        return ResponseEntity.ok("Unfollowed author successfully.");
+    }
+
+    @GetMapping("/followers/{authorId}")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> getAuthorFollowers(@PathVariable long authorId) {
+        return ResponseEntity.ok(userService.getAuthorFollowers(authorId));
+    }
+
+    @GetMapping("/following/{username}")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    public ResponseEntity<?> getUserFollowing(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getUserFollowing(username));
+    }
+
+    @GetMapping("/followers/count/{authorId}")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> getFollowerCount(@PathVariable long authorId) {
+        return ResponseEntity.ok(userService.getFollowerCount(authorId));
+    }
+
     private String generateHtmlResponse(String title, String message) {
         String logoUrl = "http://14.225.207.58:3000/photo/dd08665ea32a0a8ee80f.png";
 
