@@ -479,7 +479,9 @@ public class UserServiceImpl implements UserService {
                 .toList()
             );
         }
-
+        if(user.getRoles().stream().map(Role::getName).toList().contains("ROLE_AUTHOR")) {
+            userResponseDTO.setFollowerCount(user.getFollowerCount());
+        }
         return userResponseDTO;
     }
 

@@ -24,4 +24,5 @@ public class UserResponseDTO {
     private String tierName;
     private List<Integer> selectedGenreIds;
     private List<String> hobbyNames;
+    private int followerCount;
 }

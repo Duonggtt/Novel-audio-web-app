@@ -325,7 +325,7 @@ public class UserController {
     }
 
     @GetMapping("/followers/count/{authorId}")
-    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getFollowerCount(@PathVariable long authorId) {
         return ResponseEntity.ok(userService.getFollowerCount(authorId));
     }
