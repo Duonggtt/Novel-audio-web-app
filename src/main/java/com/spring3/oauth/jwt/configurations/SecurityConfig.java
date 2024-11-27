@@ -61,7 +61,7 @@ public class SecurityConfig {
                     "/api/v1/genres/", "/api/v1/select-genres", "/api/v1/novels/**",
                     "/api/v1/bxh/top-read", "api/v1/bxh/top-point", "/api/v1/novels/bxh/top-read",
                         "/api/v1/mail-role/acceptRedirect", "/api/v1/mail-role/declineRedirect", "/api/v1/mail-role/accept", "/api/v1/mail-role/decline",
-                        "api/v1/send-update-role-email")
+                        "api/v1/send-update-role-email", "/api/v1/payment/callback", "/api/v1/payment/packages", "/api/v1/payment/callback-html")
                 .permitAll()
 
                 .requestMatchers("/api/v1/audio-files/**","/api/v1/authors/**", "/api/v1/chapters/**",

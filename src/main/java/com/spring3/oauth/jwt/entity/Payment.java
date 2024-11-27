@@ -33,6 +33,7 @@ public class Payment {
     private String responseCode;
 
     @ManyToOne
+    @ToString.Exclude
     @JoinColumn(name = "user_id")
     private User user;
 }

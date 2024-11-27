@@ -1,6 +1,7 @@
 package com.spring3.oauth.jwt.services.impl;
 
 import com.spring3.oauth.jwt.entity.*;
+import com.spring3.oauth.jwt.entity.Package;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
 import com.spring3.oauth.jwt.models.dtos.FollowResponseDTO;
@@ -50,6 +51,11 @@ public class UserServiceImpl implements UserService {
     private RoleRepository roleRepository;
     @Autowired
     private HobbyRepository hobbyRepository;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+    @Autowired
+    private PackageRepository packageRepository;
 
     // Hàm xử lý quên mật khẩu
     @Override
@@ -482,6 +488,11 @@ public class UserServiceImpl implements UserService {
         if(user.getRoles().stream().map(Role::getName).toList().contains("ROLE_AUTHOR")) {
             userResponseDTO.setFollowerCount(user.getFollowerCount());
         }
+        Subscription subscription = subscriptionRepository.findSubByUserIdAndActive(user.getId(), true)
+            .orElseThrow(() -> new NotFoundException("Subscription not found with user id: " + user.getId()));
+        Package pack = packageRepository.findById(subscription.getPackageInfo().getId())
+            .orElseThrow(() -> new NotFoundException("Package not found with id: " + subscription.getPackageInfo().getId()));
+        userResponseDTO.setPackageType(pack.getName());
         return userResponseDTO;
     }
 
@@ -492,7 +503,5 @@ public class UserServiceImpl implements UserService {
         List<UserResponse> userResponses = modelMapper.map(users, setOfDTOsType);
         return userResponses;
     }
-
-
 
 }

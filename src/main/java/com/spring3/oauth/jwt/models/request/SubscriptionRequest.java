@@ -9,10 +9,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class PaymentRequest {
-    private long amount;
+public class SubscriptionRequest {
+    private Long packageId;
+    private Long userId;
+    private Long amount;
     private String orderInfo;
-    private long packageId;
-    private boolean isRenewal;
-    private Long existingSubscriptionId;
 }
