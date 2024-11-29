@@ -1,6 +1,7 @@
 package com.spring3.oauth.jwt.services.impl;
 
 import com.spring3.oauth.jwt.entity.*;
+import com.spring3.oauth.jwt.entity.Package;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
 import com.spring3.oauth.jwt.models.dtos.FollowResponseDTO;
@@ -17,6 +18,8 @@ import com.spring3.oauth.jwt.services.EmailService;
 import com.spring3.oauth.jwt.services.UserService;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,7 +29,9 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,6 +39,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     @Autowired
     UserRepository userRepository;
 
@@ -50,6 +56,11 @@ public class UserServiceImpl implements UserService {
     private RoleRepository roleRepository;
     @Autowired
     private HobbyRepository hobbyRepository;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+    @Autowired
+    private PackageRepository packageRepository;
 
     // Hàm xử lý quên mật khẩu
     @Override
@@ -482,6 +493,15 @@ public class UserServiceImpl implements UserService {
         if(user.getRoles().stream().map(Role::getName).toList().contains("ROLE_AUTHOR")) {
             userResponseDTO.setFollowerCount(user.getFollowerCount());
         }
+        Subscription subscription = subscriptionRepository.findSubsByUserIdAndActive(user.getId(), true);
+        if(subscription == null) {
+            userResponseDTO.setDayLeft("Bạn chưa mua gói premium.");
+            return userResponseDTO;
+        }
+
+        userResponseDTO.setDayLeft("Gói của bạn còn lại " + ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(), subscription.getEndDate().toLocalDate()) + " ngày.");
+        System.out.println(LocalDateTime.now().toLocalDate());
+        System.out.println(subscription.getEndDate().toLocalDate());
         return userResponseDTO;
     }
 
@@ -492,7 +512,5 @@ public class UserServiceImpl implements UserService {
         List<UserResponse> userResponses = modelMapper.map(users, setOfDTOsType);
         return userResponses;
     }
-
-
 
 }

@@ -11,6 +11,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+
 @Service
 public class EmailService {
 
@@ -70,6 +72,26 @@ public class EmailService {
         helper.setText("<p>" + messageContent + "</p>", true);
         helper.setFrom("novelaudio247@gmail.com");  // Your main email
 
+        mailSender.send(message);
+    }
+
+    public void sendSubscriptionExpiredNotification(String email, String name) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(email);
+        helper.setSubject("Subscription expired");
+        helper.setText("Dear " + name + ",\n\nYour subscription has expired. Please renew your subscription to continue using our service.\n\nBest regards,\nNovel Audio");
+        helper.setFrom("novelaudio247@gmail.com");
+        mailSender.send(message);
+    }
+
+    public void sendExpirationWarning(String email, String name, LocalDateTime endDate) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(email);
+        helper.setSubject("Subscription expiration warning");
+        helper.setText("Dear " + name + ",\n\nYour subscription will expire on " + endDate + ". Please renew your subscription to continue using our service.\n\nBest regards,\nNovel Audio");
+        helper.setFrom("novelaudio247@gmail.com");
         mailSender.send(message);
     }
 }
