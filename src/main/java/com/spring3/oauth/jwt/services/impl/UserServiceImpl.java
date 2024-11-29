@@ -18,6 +18,8 @@ import com.spring3.oauth.jwt.services.EmailService;
 import com.spring3.oauth.jwt.services.UserService;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +29,9 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,6 +39,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     @Autowired
     UserRepository userRepository;
 
@@ -488,11 +493,15 @@ public class UserServiceImpl implements UserService {
         if(user.getRoles().stream().map(Role::getName).toList().contains("ROLE_AUTHOR")) {
             userResponseDTO.setFollowerCount(user.getFollowerCount());
         }
-        Subscription subscription = subscriptionRepository.findSubByUserIdAndActive(user.getId(), true)
-            .orElseThrow(() -> new NotFoundException("Subscription not found with user id: " + user.getId()));
-        Package pack = packageRepository.findById(subscription.getPackageInfo().getId())
-            .orElseThrow(() -> new NotFoundException("Package not found with id: " + subscription.getPackageInfo().getId()));
-        userResponseDTO.setPackageType(pack.getName());
+        Subscription subscription = subscriptionRepository.findSubsByUserIdAndActive(user.getId(), true);
+        if(subscription == null) {
+            userResponseDTO.setDayLeft("Bạn chưa mua gói premium.");
+            return userResponseDTO;
+        }
+
+        userResponseDTO.setDayLeft("Gói của bạn còn lại " + ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(), subscription.getEndDate().toLocalDate()) + " ngày.");
+        System.out.println(LocalDateTime.now().toLocalDate());
+        System.out.println(subscription.getEndDate().toLocalDate());
         return userResponseDTO;
     }
 

@@ -157,7 +157,7 @@ public class VNPayService {
         try {
             // 1. Lấy các thông tin từ queryParams
             String responseCode = queryParams.get("vnp_ResponseCode");
-            String transactionNo = queryParams.get("vnp_TransactionNo");
+            String transactionNo = queryParams.get("vnp_TxnRef");
             String orderInfo = queryParams.get("vnp_OrderInfo");
             long amount = Long.parseLong(queryParams.get("vnp_Amount")) / 100;  // VNPay sends amount in cents
 
@@ -205,7 +205,7 @@ public class VNPayService {
                     subscription.setPackageInfo(packageInfo);
                     subscription.setPayment(payment);
                     subscription.setStartDate(currentSub.getEndDate().isAfter(now) ? currentSub.getEndDate() : now);
-                    subscription.setEndDate(subscription.getStartDate().plusMonths(packageInfo.getDuration()));  // Gia hạn thời gian
+                    subscription.setEndDate(subscription.getStartDate().plusDays(packageInfo.getDuration()));  // Gia hạn thời gian
                     subscription.setActive(true);
                     subscription.setNotificationSent(false);  // Đánh dấu chưa gửi thông báo
 
@@ -216,7 +216,7 @@ public class VNPayService {
                     subscription.setPackageInfo(packageInfo);
                     subscription.setPayment(payment);
                     subscription.setStartDate(now);
-                    subscription.setEndDate(now.plusMonths(packageInfo.getDuration()));  // Tính thời gian hết hạn
+                    subscription.setEndDate(now.plusDays(packageInfo.getDuration()));  // Tính thời gian hết hạn
                     subscription.setActive(true);
                     subscription.setNotificationSent(false);  // Đánh dấu chưa gửi thông báo
                 }
@@ -335,12 +335,10 @@ public class VNPayService {
         }
     }
 
-    public PaymentResponse findPaymentByUserId(long userId) {
+    public PaymentResponse findPaymentByTransactionNo(String transactionNo) {
         // Tìm payment trong database
-        Payment payment = paymentRepository.findByUser_Id(userId);
-        if(payment == null) {
-            throw new RuntimeException("Payment not found with userId: " + userId);
-        }
+        Payment payment = paymentRepository.findByTransactionNo(transactionNo)
+            .orElseThrow(() -> new RuntimeException("Payment not found with transactionNo: " + transactionNo));
 
         // Tạo đối tượng phản hồi
         PaymentResponse response = new PaymentResponse();
