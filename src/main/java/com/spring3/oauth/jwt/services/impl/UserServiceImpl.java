@@ -512,6 +512,12 @@ public class UserServiceImpl implements UserService {
         }
 
         userResponseDTO.setDayLeft("Gói của bạn còn lại " + ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(), subscription.getEndDate().toLocalDate()) + " ngày.");
+        if(user.getWallet() == null) {
+            userResponseDTO.setCoinWallet(0);
+            userResponseDTO.setCoinSpent(0);
+            return userResponseDTO;
+        }
+
         userResponseDTO.setCoinWallet(user.getWallet().getCoinAmount());
         userResponseDTO.setCoinSpent(user.getWallet().getCoinSpent());
         return userResponseDTO;
