@@ -28,6 +28,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -61,6 +62,9 @@ public class UserServiceImpl implements UserService {
     private SubscriptionRepository subscriptionRepository;
     @Autowired
     private PackageRepository packageRepository;
+
+    @Autowired
+    private CoinWalletRepository walletRepository;
 
     // Hàm xử lý quên mật khẩu
     @Override
@@ -229,6 +233,13 @@ public class UserServiceImpl implements UserService {
         user.setPoint(1);
         user.setSelectedGenres(null);
         user.setHobbies(null);
+        CoinWallet wallet = new CoinWallet();
+        wallet.setId("wallet_" + user.getId());
+        wallet.setCoinAmount(0);
+        wallet.setCoinSpent(0);
+        wallet.setCreatedDate(LocalDate.now());
+        walletRepository.save(wallet);
+        user.setWallet(wallet);
         if(userRequest.getId() != null){
             User oldUser = userRepository.findFirstById(userRequest.getId());
             if(oldUser != null){
@@ -246,6 +257,7 @@ public class UserServiceImpl implements UserService {
                 oldUser.setPoint(user.getPoint());
                 oldUser.setSelectedGenres(null);
                 oldUser.setHobbies(null);
+                oldUser.setWallet(user.getWallet());
                 savedUser = userRepository.save(oldUser);
                 userRepository.refresh(savedUser);
             } else {
@@ -500,8 +512,8 @@ public class UserServiceImpl implements UserService {
         }
 
         userResponseDTO.setDayLeft("Gói của bạn còn lại " + ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(), subscription.getEndDate().toLocalDate()) + " ngày.");
-        System.out.println(LocalDateTime.now().toLocalDate());
-        System.out.println(subscription.getEndDate().toLocalDate());
+        userResponseDTO.setCoinWallet(user.getWallet().getCoinAmount());
+        userResponseDTO.setCoinSpent(user.getWallet().getCoinSpent());
         return userResponseDTO;
     }
 

@@ -3,6 +3,8 @@ package com.spring3.oauth.jwt.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @ToString
@@ -21,7 +23,6 @@ public class CoinWallet {
     @Column(name = "coin_spent")
     private int coinSpent;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "created_date")
+    private LocalDate createdDate;
 }

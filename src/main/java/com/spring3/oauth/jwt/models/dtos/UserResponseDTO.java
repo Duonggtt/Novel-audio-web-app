@@ -26,4 +26,6 @@ public class UserResponseDTO {
     private List<String> hobbyNames;
     private int followerCount;
     private String dayLeft;
+    private int coinWallet;
+    private int coinSpent;
 }
