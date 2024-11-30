@@ -54,7 +54,7 @@ public class PaymentController {
     }
 
     @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
-    @PostMapping("/coins/create/{userId}")
+    @PostMapping("/coins/create-order/{userId}")
     public ResponseEntity<Map<String, String>> createCoinPayment(@RequestBody PaymentCoinRequest request, @PathVariable long userId) {
         String paymentUrl = vnPayService.createCoinPayment(request, userId);
         // Lấy transaction number từ payment
@@ -72,7 +72,7 @@ public class PaymentController {
         return ResponseEntity.ok(packageRepository.findAll());
     }
 
-    @GetMapping("/coins/packages")
+    @GetMapping("/coins/packs")
     public ResponseEntity<?> getAvailableCoinPackages() {
         return ResponseEntity.ok(coinPackageRepository.findAll());
     }
@@ -118,7 +118,7 @@ public class PaymentController {
         return generatePaymentHtml(statusClass, message, transactionNo, packageName, expirationDate, totalAmount, paymentDate);
     }
 
-    @GetMapping("/coins/callback-html")
+    @GetMapping("/coins/callback")
     public String paymentCoinCallbackHtml(@RequestParam Map<String, String> queryParams) {
         PaymentCoinResponse response = vnPayService.processPaymentCoinResponse(queryParams);
 
@@ -160,7 +160,7 @@ public class PaymentController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/coins/check-status/{transactionNo}")
+    @GetMapping("/coins/tracking-status/{transactionNo}")
     public ResponseEntity<Map<String, Object>> checkPaymentCoinStatus(@PathVariable String transactionNo) {
         PaymentCoinResponse response = vnPayService.findPaymentCoinByTransactionNo(transactionNo);
 

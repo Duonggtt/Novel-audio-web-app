@@ -163,7 +163,7 @@ public class VNPayService {
         vnp_Params.put("vnp_OrderInfo", orderInfo);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", returnUrl);
+        vnp_Params.put("vnp_ReturnUrl", "http://localhost:8080/api/v1/payment/coin/callback");
         vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
         // Get current time
