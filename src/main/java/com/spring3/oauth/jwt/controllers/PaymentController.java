@@ -34,7 +34,7 @@ public class PaymentController {
 
 
     @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
-    @PostMapping("/subs/create/{userId}")
+    @PostMapping("/create/{userId}")
     public ResponseEntity<Map<String, String>> createPayment(@RequestBody PaymentRequest request, @PathVariable long userId) {
         String paymentUrl = vnPayService.createPayment(request, userId);
         // Lấy transaction number từ payment
@@ -47,7 +47,7 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/subs/packages")
+    @GetMapping("/packages")
     public ResponseEntity<?> getAvailablePackages() {
         return ResponseEntity.ok(packageRepository.findAll());
     }
@@ -59,7 +59,7 @@ public class PaymentController {
         return ResponseEntity.ok(paymentUrl);
     }
 
-    @GetMapping("/subs/callback-html")
+    @GetMapping("/callback-html")
     public String paymentCallbackHtml(@RequestParam Map<String, String> queryParams) {
         PaymentResponse response = vnPayService.processPaymentResponse(queryParams);
 
@@ -93,7 +93,7 @@ public class PaymentController {
         return generatePaymentHtml(statusClass, message, transactionNo, packageName, expirationDate, totalAmount, paymentDate);
     }
 
-    @GetMapping("/subs/check-status/{transactionNo}")
+    @GetMapping("/check-status/{transactionNo}")
     public ResponseEntity<Map<String, Object>> checkPaymentStatus(@PathVariable String transactionNo) {
         PaymentResponse response = vnPayService.findPaymentByTransactionNo(transactionNo);
 
