@@ -59,6 +59,17 @@ public class VNPayService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Kiểm tra xem người dùng đã có gói này chưa, và gói đó có hết hạn chưa
+        Subscription existingSubscription = subscriptionRepository.findActiveSubscriptionByUserIdAndPackageId(userId, request.getPackageId());
+
+        // Nếu người dùng đã có gói này và gói đó chưa hết hạn, không cho phép mua lại
+        if (existingSubscription != null && existingSubscription.getEndDate().isAfter(LocalDateTime.now())) {
+            throw new RuntimeException("You already have an active subscription for this package.");
+        }
+
+        // Nếu người dùng đã có gói này nhưng đã hết hạn, có thể mua lại gói này
+        // Nếu không có gói hoặc gói đã hết hạn, cho phép tiếp tục tạo Payment
+
         // Convert package info into JSON string
         String packageInfo = createPackageInfo(request);
 
@@ -163,7 +174,7 @@ public class VNPayService {
         vnp_Params.put("vnp_OrderInfo", orderInfo);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", "http://localhost:8080/api/v1/payment/coin/callback");
+        vnp_Params.put("vnp_ReturnUrl", returnUrl);
         vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
         // Get current time
@@ -244,7 +255,7 @@ public class VNPayService {
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + paymentOrderInfo.getUserId()));
 
             // 4. Tạo và lưu payment record vào database
-            Payment payment = paymentRepository.findByUser_Id(user.getId());
+            Payment payment = paymentRepository.findFirstByUserIdAndOrderInfoContainingOrderByIdDesc(user.getId(), "PKG");
             if (payment == null) {
                 throw new RuntimeException("Payment not found with user ID: " + user.getId());
             }
@@ -341,7 +352,7 @@ public class VNPayService {
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + paymentCoinOrderInfo.getUserId()));
 
             // 4. Tạo và lưu payment record vào database
-            Payment payment = paymentRepository.findByUser_Id(user.getId());
+            Payment payment = paymentRepository.findTop1ByUserIdOrderByIdDesc(user.getId());
             if (payment == null) {
                 throw new RuntimeException("Payment not found with user ID: " + user.getId());
             }
