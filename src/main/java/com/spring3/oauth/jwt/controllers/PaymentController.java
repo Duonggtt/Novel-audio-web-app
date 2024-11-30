@@ -160,6 +160,21 @@ public class PaymentController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/coins/check-status/{transactionNo}")
+    public ResponseEntity<Map<String, Object>> checkPaymentCoinStatus(@PathVariable String transactionNo) {
+        PaymentCoinResponse response = vnPayService.findPaymentCoinByTransactionNo(transactionNo);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", response.isSuccess());
+        result.put("message", response.getMessage());
+        result.put("transactionNo", response.getTransactionNo());
+        result.put("packageName", response.getPackageName());
+        result.put("finalCoinAmount", response.getFinalCoinAmount());
+        result.put("discount", response.getDiscount());
+
+        return ResponseEntity.ok(result);
+    }
+
     private String formatAmount(String rawAmount) {
         try {
             // Chuyển đổi số tiền từ chuỗi sang số nguyên

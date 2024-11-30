@@ -560,7 +560,67 @@ public class VNPayService {
         return response;
     }
 
+    public PaymentCoinResponse findPaymentCoinByTransactionNo(String transactionNo) {
+        // Tìm payment trong database
+        Payment payment = paymentRepository.findByTransactionNo(transactionNo)
+            .orElseThrow(() -> new RuntimeException("Payment not found with transactionNo: " + transactionNo));
 
+        // Tạo đối tượng phản hồi
+        PaymentCoinResponse response = new PaymentCoinResponse();
+
+        // Lấy mã phản hồi từ VNPay
+        String responseCode = payment.getResponseCode();
+
+        // Kiểm tra mã phản hồi từ VNPay và trả về thông điệp phù hợp
+        switch (responseCode) {
+            case "00":  // Thanh toán thành công
+                response.setSuccess(true);
+                response.setMessage("Payment successful");
+                break;
+            case "01":  // Lỗi trong quá trình thanh toán
+                response.setSuccess(false);
+                response.setMessage("Transaction failed. Please try again.");
+                break;
+            case "04":  // Thanh toán chưa hoàn thành, đang xử lý
+                response.setSuccess(false);
+                response.setMessage("Payment is being processed. Please wait.");
+                break;
+            case "11":  // Thanh toán thất bại
+                response.setSuccess(false);
+                response.setMessage("Payment failed. Please check your payment method.");
+                break;
+            case "07":  // Người dùng hủy giao dịch
+                response.setSuccess(false);
+                response.setMessage("Payment was canceled by the user.");
+                break;
+            case "05":  // Ngân hàng từ chối giao dịch
+                response.setSuccess(false);
+                response.setMessage("Payment was declined by the bank.");
+                break;
+            default:  // Mã phản hồi không xác định
+                response.setSuccess(false);
+                response.setMessage("Unknown payment status: " + responseCode);
+                break;
+        }
+
+        // Thêm thông tin giao dịch vào phản hồi
+        response.setTransactionNo(payment.getTransactionNo());
+
+        String coinPackageId = payment.getOrderInfo()
+            .substring(payment.getOrderInfo().lastIndexOf("|") + 1);
+
+        CoinPackage coinPackage = coinPackageRepository.findById(coinPackageId)
+            .orElseThrow(() -> new RuntimeException("Coin package not found"));
+
+        // Nếu thanh toán thành công trả về thông tin gói
+        if (response.isSuccess()) {
+            response.setPackageName("Gói " + coinPackage.getBeforeCoinAmount() + " xu.");
+            response.setFinalCoinAmount("Tổng xu nhận được là " + payment.getAmount() + " xu.");
+            response.setDiscount(coinPackage.getDiscount());
+        }
+
+        return response;
+    }
 
     private Payment savePaymentRecord(Map<String, String> queryParams, User user) {
         Payment payment = new Payment();
