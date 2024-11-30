@@ -90,6 +90,10 @@ public class User {
     @ManyToMany(fetch = LAZY)
     private List<Hobby> hobbies;
 
+    @OneToOne
+    @JoinColumn(name = "wallet_id")
+    private CoinWallet wallet;
+
     // Helper methods for managing followers
     public void addFollower(User follower) {
         followers.add(follower);
