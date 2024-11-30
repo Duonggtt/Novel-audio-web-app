@@ -1,15 +1,12 @@
 package com.spring3.oauth.jwt.services;
 
+import com.spring3.oauth.jwt.entity.*;
 import com.spring3.oauth.jwt.entity.Package;
-import com.spring3.oauth.jwt.entity.Payment;
-import com.spring3.oauth.jwt.entity.Subscription;
-import com.spring3.oauth.jwt.entity.User;
+import com.spring3.oauth.jwt.models.request.PaymentCoinRequest;
 import com.spring3.oauth.jwt.models.request.PaymentRequest;
+import com.spring3.oauth.jwt.models.response.PaymentCoinResponse;
 import com.spring3.oauth.jwt.models.response.PaymentResponse;
-import com.spring3.oauth.jwt.repositories.PackageRepository;
-import com.spring3.oauth.jwt.repositories.PaymentRepository;
-import com.spring3.oauth.jwt.repositories.SubscriptionRepository;
-import com.spring3.oauth.jwt.repositories.UserRepository;
+import com.spring3.oauth.jwt.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -53,6 +50,9 @@ public class VNPayService {
 
     @Autowired
     private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private CoinPackageRepository coinPackageRepository;
 
     public String createPayment(PaymentRequest request, long userId) {
         // Validate user
@@ -138,7 +138,81 @@ public class VNPayService {
         return payUrl + "?" + queryUrl;
     }
 
+    //payment for coin
+    public String createCoinPayment(PaymentCoinRequest request, long userId) {
+        // Validate user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Tạo thông tin PaymentParams cho VNPay
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", "2.1.0");
+        vnp_Params.put("vnp_Command", "pay");
+        vnp_Params.put("vnp_TmnCode", tmnCode);
+        vnp_Params.put("vnp_Amount", String.valueOf(request.getAmount() * 100));  // VNPay expects amount in "VND" cents
+        vnp_Params.put("vnp_CurrCode", "VND");
+
+        String orderType = "other";
+        String orderInfo = String.format("USER_%d|%s|%s",
+            userId,
+            request.getOrderInfo(),
+            request.getCoinPackageId()
+        );
+
+        vnp_Params.put("vnp_TxnRef", getRandomNumber(8));  // Random transaction reference
+        vnp_Params.put("vnp_OrderInfo", orderInfo);
+        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_ReturnUrl", returnUrl);
+        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+
+        // Get current time
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String vnp_CreateDate = formatter.format(cld.getTime());
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+
+        // Sort the params and create the query string
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        Collections.sort(fieldNames);
+        StringBuilder query = new StringBuilder();
+        StringBuilder hashData = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = vnp_Params.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII))
+                    .append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                if (itr.hasNext()) {
+                    query.append('&');
+                    hashData.append('&');
+                }
+            }
+        }
+
+        // Create Secure Hash using HMAC-SHA512
+        String queryUrl = query.toString();
+        String vnp_SecureHash = hmacSHA512(hashSecret, hashData.toString());
+        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+
+        // Now create the Payment record with status 04 (processing)
+        Payment payment = new Payment();
+        payment.setAmount(request.getAmount());
+        payment.setTransactionNo(vnp_Params.get("vnp_TxnRef"));
+        payment.setOrderInfo(orderInfo);
+        payment.setBankCode("");  // No bank code at creation
+        payment.setPayDate("");  // No payment date yet
+        payment.setResponseCode("04");  // Payment status: "04" (Processing)
+        payment.setUser(user);
+
+        // Save payment record in the database with status "04"
+        paymentRepository.save(payment);
+
+        // Return the payment URL to redirect to VNPay
+        return payUrl + "?" + queryUrl;
+    }
 
     private String createPackageInfo(PaymentRequest request) {
         // Format: PACKAGE_ID|IS_RENEWAL|SUBSCRIPTION_ID
@@ -246,6 +320,67 @@ public class VNPayService {
         return response;
     }
 
+    @Transactional
+    public PaymentCoinResponse processPaymentCoinResponse(Map<String, String> queryParams) {
+        PaymentCoinResponse response = new PaymentCoinResponse();
+        log.info(" Received payment callback with params: {}", queryParams);
+
+        try {
+            // 1. Lấy các thông tin từ queryParams
+            String responseCode = queryParams.get("vnp_ResponseCode");
+            String transactionNo = queryParams.get("vnp_TxnRef");
+            String orderInfo = queryParams.get("vnp_OrderInfo");
+            long amount = Long.parseLong(queryParams.get("vnp_Amount")) / 100;  // VNPay sends amount in cents
+
+            // 2. Parse orderInfo để lấy userId và packageCoinId
+            PaymentCoinOrderInfo paymentCoinOrderInfo = parseCoinOrderInfo(orderInfo);
+            log.info("Parsed order info: {}", paymentCoinOrderInfo);
+
+            // 3. Lấy thông tin user từ database
+            User user = userRepository.findById(paymentCoinOrderInfo.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + paymentCoinOrderInfo.getUserId()));
+
+            // 4. Tạo và lưu payment record vào database
+            Payment payment = paymentRepository.findByUser_Id(user.getId());
+            if (payment == null) {
+                throw new RuntimeException("Payment not found with user ID: " + user.getId());
+            }
+            payment.setTransactionNo(transactionNo);
+
+            // Cập nhật trạng thái payment từ VNPay
+            payment.setResponseCode(responseCode);  // Cập nhật mã phản hồi (success/fail)
+            payment.setPayDate(LocalDateTime.now().toString());  // Lưu thời gian thanh toán
+            paymentRepository.save(payment);  // Lưu thông tin payment vào DB
+
+            // 5. Nếu thanh toán thành công, xử lý subscription
+            if ("00".equals(responseCode)) {  // Mã "00" từ VNPay là thanh toán thành công
+                CoinPackage packageInfo = coinPackageRepository.findById(paymentCoinOrderInfo.getPackageCoinId())
+                    .orElseThrow(() -> new RuntimeException("Package not found with ID: " + paymentCoinOrderInfo.getPackageCoinId()));
+
+
+                // Trả về thông tin thành công
+                response.setSuccess(true);
+                response.setMessage("Payment successful");
+                response.setTransactionNo(transactionNo);
+                response.setPackageName("Gói " + packageInfo.getBeforeCoinAmount() + " xu.");
+                response.setDiscount(packageInfo.getDiscount());
+                response.setFinalCoinAmount("Tổng xu nhận được là " + packageInfo.getFinalCoinAmount() + " xu.");
+            } else {
+                // Thanh toán thất bại, cập nhật trạng thái thất bại
+                response.setSuccess(false);
+                response.setMessage("Payment failed with code: " + responseCode);
+                response.setTransactionNo(transactionNo);
+            }
+
+        } catch (Exception e) {
+            log.error("Error processing payment callback: ", e);
+            response.setSuccess(false);
+            response.setMessage("Error processing payment: " + e.getMessage());
+        }
+
+        return response;
+    }
+
 
     private PaymentOrderInfo parseOrderInfo(String orderInfo) {
         log.info("Parsing order info: {}", orderInfo);
@@ -286,6 +421,37 @@ public class VNPayService {
             throw new RuntimeException("Failed to parse order info: " + e.getMessage());
         }
     }
+
+    private PaymentCoinOrderInfo parseCoinOrderInfo(String orderInfo) {
+        log.info("Parsing coin order info: {}", orderInfo);
+        try {
+            // Tách order info: USER_<userId>|<orderDescription>|<coinPackageId>
+            String[] parts = orderInfo.split("\\|");
+            if (parts.length != 3) { // Đảm bảo có đủ 3 phần
+                throw new RuntimeException("Invalid order info format. Expected 3 parts, found: " + parts.length);
+            }
+
+            // Tạo object PaymentOrderInfo để lưu thông tin đã tách
+            PaymentCoinOrderInfo info = new PaymentCoinOrderInfo();
+
+            // Parse userId từ USER_<userId>
+            if (parts[0].startsWith("USER_")) {
+                info.setUserId(Long.parseLong(parts[0].substring(5))); // Bỏ "USER_"
+            } else {
+                throw new RuntimeException("Invalid user ID format: " + parts[0]);
+            }
+
+            // Parse coinPackageId từ PKG_<packageId>
+            info.setPackageCoinId(parts[2]);
+
+            return info;
+
+        } catch (Exception e) {
+            log.error("Error parsing coin order info: {}", orderInfo, e);
+            throw new RuntimeException("Failed to parse coin order info: " + e.getMessage());
+        }
+    }
+
 
     private Subscription processSubscription(PaymentOrderInfo orderInfo, Payment payment, User user) {
         // Find existing active subscription
@@ -472,4 +638,12 @@ public class VNPayService {
         private boolean isRenewal;
         private Long existingSubscriptionId;
     }
+
+    @Getter
+    @Setter
+    private static class PaymentCoinOrderInfo {
+        private Long userId;
+        private String packageCoinId;
+    }
+
 }
