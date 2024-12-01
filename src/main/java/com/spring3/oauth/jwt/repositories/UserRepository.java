@@ -24,4 +24,5 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
    List<User> findFourUsersHaveHighestScore();
    @Query("SELECT u FROM User u WHERE u.username = ?1 AND u.id = ?2")
    User findByUsernameAndId(String username, long id);
+   User getUserById(long id);
 }

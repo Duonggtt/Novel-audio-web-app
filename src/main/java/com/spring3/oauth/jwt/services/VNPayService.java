@@ -5,6 +5,7 @@ import com.spring3.oauth.jwt.entity.Package;
 import com.spring3.oauth.jwt.models.request.PaymentCoinRequest;
 import com.spring3.oauth.jwt.models.request.PaymentRequest;
 import com.spring3.oauth.jwt.models.response.PaymentCoinResponse;
+import com.spring3.oauth.jwt.models.response.PaymentHistoryResponse;
 import com.spring3.oauth.jwt.models.response.PaymentResponse;
 import com.spring3.oauth.jwt.repositories.*;
 import jakarta.transaction.Transactional;
@@ -699,6 +700,49 @@ public class VNPayService {
             }
         }
         return hmacSHA512(hashSecret, sb.toString());
+    }
+
+    public List<PaymentHistoryResponse> getPaymentHistoryByUser(long userId) {
+        List<Payment> payments = paymentRepository.findAllUserById(userId);
+        if(payments.isEmpty()) {
+            throw new NullPointerException("Không có lịch sử giao dịch");
+        }
+        return payments.stream()
+            .map(this::convertToHistoryResponse)
+            .toList();
+    }
+
+    PaymentHistoryResponse convertToHistoryResponse(Payment request) {
+        PaymentHistoryResponse response = new PaymentHistoryResponse();
+        response.setTransactionNo(request.getTransactionNo());
+        response.setAmount(response.getAmount());
+        response.setOrderInfo(request.getOrderInfo());
+        response.setPayDate(request.getPayDate());
+        String status = request.getResponseCode();
+        switch (status) {
+            case "00":  // Thanh toán thành công
+                response.setResponseStatus("Payment successful");
+                break;
+            case "01":  // Lỗi trong quá trình thanh toán
+                response.setResponseStatus("Transaction failed");
+                break;
+            case "04":  // Thanh toán chưa hoàn thành, đang xử lý
+                response.setResponseStatus("Payment is being processed");
+                break;
+            case "11":  // Thanh toán thất bại
+                response.setResponseStatus("Payment failed");
+                break;
+            case "07":  // Người dùng hủy giao dịch
+                response.setResponseStatus("Payment was canceled by the user");
+                break;
+            case "05":  // Ngân hàng từ chối giao dịch
+                response.setResponseStatus("Payment was declined by the bank");
+                break;
+            default:  // Mã phản hồi không xác định
+                response.setResponseStatus("Unknown payment status: " + status);
+                break;
+        }
+        return response;
     }
 
     @Getter

@@ -152,6 +152,52 @@ public class PaymentController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    @PostMapping("/coins/create/{userId}")
+    public ResponseEntity<Map<String, String>> createCoinPayment(@RequestBody PaymentCoinRequest request, @PathVariable long userId) {
+        String paymentUrl = vnPayService.createCoinPayment(request, userId);
+        // Lấy transaction number từ payment
+        Payment payment = paymentRepository.findTop1ByUserIdOrderByIdDesc(userId);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("paymentUrl", paymentUrl);
+        response.put("transactionNo", payment.getTransactionNo());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/coins/packages")
+    public ResponseEntity<?> getAvailableCoinPackages() {
+        return ResponseEntity.ok(coinPackageRepository.findAll());
+    }
+
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    @PostMapping("/subscribe")
+    public ResponseEntity<String> createSubscription(@RequestBody PaymentRequest request, @RequestParam long userId) {
+        String paymentUrl = vnPayService.createPayment(request, userId);
+        return ResponseEntity.ok(paymentUrl);
+    }
+
+
+    @GetMapping("/coins/check-status/{transactionNo}")
+    public ResponseEntity<Map<String, Object>> checkPaymentCoinStatus(@PathVariable String transactionNo) {
+        PaymentCoinResponse response = vnPayService.findPaymentCoinByTransactionNo(transactionNo);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", response.isSuccess());
+        result.put("message", response.getMessage());
+        result.put("transactionNo", response.getTransactionNo());
+        result.put("packageName", response.getPackageName());
+        result.put("finalCoinAmount", response.getFinalCoinAmount());
+        result.put("discount", response.getDiscount());
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/transaction-history/{userId}")
+    public ResponseEntity<?> getTransactionHistory(@PathVariable long userId) {
+        return ResponseEntity.ok(vnPayService.getPaymentHistoryByUser(userId));
+    }
 
     private String generatePaymentHtml(String statusClass, String message, String transactionNo, String packageName, String totalAmount, String paymentDate) {
         StringBuilder html = new StringBuilder();
@@ -239,48 +285,5 @@ public class PaymentController {
             .append("</body></html>");
         return html.toString();
     }
-
-    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
-    @PostMapping("/coins/create/{userId}")
-    public ResponseEntity<Map<String, String>> createCoinPayment(@RequestBody PaymentCoinRequest request, @PathVariable long userId) {
-        String paymentUrl = vnPayService.createCoinPayment(request, userId);
-        // Lấy transaction number từ payment
-        Payment payment = paymentRepository.findTop1ByUserIdOrderByIdDesc(userId);
-
-        Map<String, String> response = new HashMap<>();
-        response.put("paymentUrl", paymentUrl);
-        response.put("transactionNo", payment.getTransactionNo());
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/coins/packages")
-    public ResponseEntity<?> getAvailableCoinPackages() {
-        return ResponseEntity.ok(coinPackageRepository.findAll());
-    }
-
-    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
-    @PostMapping("/subscribe")
-    public ResponseEntity<String> createSubscription(@RequestBody PaymentRequest request, @RequestParam long userId) {
-        String paymentUrl = vnPayService.createPayment(request, userId);
-        return ResponseEntity.ok(paymentUrl);
-    }
-
-
-    @GetMapping("/coins/check-status/{transactionNo}")
-    public ResponseEntity<Map<String, Object>> checkPaymentCoinStatus(@PathVariable String transactionNo) {
-        PaymentCoinResponse response = vnPayService.findPaymentCoinByTransactionNo(transactionNo);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", response.isSuccess());
-        result.put("message", response.getMessage());
-        result.put("transactionNo", response.getTransactionNo());
-        result.put("packageName", response.getPackageName());
-        result.put("finalCoinAmount", response.getFinalCoinAmount());
-        result.put("discount", response.getDiscount());
-
-        return ResponseEntity.ok(result);
-    }
-
 
 }
