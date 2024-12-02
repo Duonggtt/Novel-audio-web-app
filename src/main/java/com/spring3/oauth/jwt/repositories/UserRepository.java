@@ -25,4 +25,6 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
    @Query("SELECT u FROM User u WHERE u.username = ?1 AND u.id = ?2")
    User findByUsernameAndId(String username, long id);
    User getUserById(long id);
+   @Query("SELECT COUNT(u) FROM User u WHERE u.tier.id = ?1")
+   int countAllByTierId(long tier);
 }
