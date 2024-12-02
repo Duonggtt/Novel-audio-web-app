@@ -56,7 +56,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeRequests(authorize -> authorize
-                .requestMatchers("/api/v1/save", "/api/v1/login", "/api/v1/refreshToken",
+                .requestMatchers("/api/v1/save", "/api/v1/login", "/api/v1/refreshToken", "/api/v1/coins/packages", "/api/v1/subs/packages",
                     "/api/v1/forgot-password", "api/v1/reset-password", "/api/v1/verify-otp",
                     "/api/v1/genres/", "/api/v1/select-genres", "/api/v1/novels/**",
                     "/api/v1/bxh/top-read", "api/v1/bxh/top-point", "/api/v1/novels/bxh/top-read",
