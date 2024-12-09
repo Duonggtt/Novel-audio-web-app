@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -57,8 +58,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private SubscriptionRepository subscriptionRepository;
+
     @Autowired
-    private PackageRepository packageRepository;
+    private UserLikeRepository userLikeRepository;
 
     @Autowired
     private CoinWalletRepository walletRepository;
@@ -393,6 +395,30 @@ public class UserServiceImpl implements UserService {
         }
 
         return scoreRanges;
+    }
+
+    @Override
+    public Map<String, Integer> getTotalLikeCountsForLastWeek() {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
+        List<Object[]> results = userLikeRepository.findTotalLikeCountsByDay(startDate);
+
+        Map<String, Integer> likeCountsByDay = new HashMap<>();
+        for (Object[] result : results) {
+            String date = result[0].toString();
+            Integer likeCounts = ((Number) result[1]).intValue();
+            likeCountsByDay.put(date, likeCounts);
+        }
+
+        // Fill in missing days with zero likes
+        List<LocalDate> lastWeekDates = IntStream.rangeClosed(0, 6)
+            .mapToObj(i -> LocalDate.now().minusDays(i))
+            .toList();
+
+        for (LocalDate date : lastWeekDates) {
+            likeCountsByDay.putIfAbsent(date.toString(), 0);
+        }
+
+        return likeCountsByDay;
     }
 
     @Override

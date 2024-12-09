@@ -43,4 +43,5 @@ public interface UserService {
     int getFollowerCount(long authorId);
     Map<String, Integer> getAllUsersQuantityForEachLevel();
     Map<String, Integer> getUserCountByScoreRange();
+    Map<String, Integer> getTotalLikeCountsForLastWeek();
 }

@@ -37,4 +37,5 @@ public interface NovelService {
     PagedResponseDTO findAllByAuthorAuthName(String authorName, Pageable pageable);
     List<String> getLikedNovelIdsByUserForSpecificNovels(Long userId, List<Integer> novelIds);
     Map<String, Integer> getNovelCountByGenre();
+    Map<String, Integer> getLikeCountsForLastWeek();
 }

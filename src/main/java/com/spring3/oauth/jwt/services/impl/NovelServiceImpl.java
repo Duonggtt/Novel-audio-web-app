@@ -116,6 +116,21 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
+    public Map<String, Integer> getLikeCountsForLastWeek() {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
+        List<Object[]> results = novelRepository.findLikeCountsByDay(startDate);
+
+        Map<String, Integer> likeCountsByDay = new HashMap<>();
+        for (Object[] result : results) {
+            String date = result[0].toString();
+            Integer likeCounts = ((Number) result[1]).intValue();
+            likeCountsByDay.put(date, likeCounts);
+        }
+
+        return likeCountsByDay;
+    }
+
+    @Override
     public boolean isNovelLikedByUser(long userId, String novelSlug) {
         return userLikeRepository.findByUser_IdAndNovel_Slug(userId, novelSlug)
             .isPresent();

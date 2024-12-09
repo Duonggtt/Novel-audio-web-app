@@ -36,4 +36,17 @@ public class DashboardController {
     public ResponseEntity<?> getNovelGenresEachRanges() {
         return ResponseEntity.ok(novelService.getNovelCountByGenre());
     }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/novel-status")
+    public ResponseEntity<?> getNovelStatusForWeek() {
+        return ResponseEntity.ok(null);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/likes")
+    public ResponseEntity<?> getNovelLikesForWeek() {
+        return ResponseEntity.ok(userService.getTotalLikeCountsForLastWeek());
+    }
+
 }

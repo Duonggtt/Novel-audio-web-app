@@ -131,4 +131,12 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
         "WHERE g.id = ?1")
     int countByGenres(Integer genreIds);
 
+    @Query("SELECT DATE(n.releasedAt) as date, SUM(n.likeCounts) as likeCounts " +
+        "FROM Novel n " +
+        "WHERE n.releasedAt >= :startDate " +
+        "GROUP BY DATE(n.releasedAt) " +
+        "ORDER BY DATE(n.releasedAt)")
+    List<Object[]> findLikeCountsByDay(@Param("startDate") LocalDateTime startDate);
+
+
 }
