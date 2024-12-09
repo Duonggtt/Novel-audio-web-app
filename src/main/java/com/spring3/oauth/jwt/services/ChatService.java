@@ -3,6 +3,9 @@ package com.spring3.oauth.jwt.services;
 import com.spring3.oauth.jwt.entity.ChatMessage;
 import com.spring3.oauth.jwt.entity.ChatRoom;
 import com.spring3.oauth.jwt.entity.User;
+import com.spring3.oauth.jwt.models.dtos.ChapterResponseDTO;
+import com.spring3.oauth.jwt.models.dtos.ChatMessageDto;
+import com.spring3.oauth.jwt.models.dtos.ChatRoomResponseDTO;
 import com.spring3.oauth.jwt.models.request.ChatRoomRequest;
 import com.spring3.oauth.jwt.models.request.JoinChatRequest;
 import com.spring3.oauth.jwt.repositories.ChatMessageRepository;
@@ -14,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,16 +42,19 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoom> getUserChatRooms(Long userId) {
+    public List<ChatRoomResponseDTO> getUserChatRooms(Long userId) {
         User user = userRepository.getUserById(userId);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        return chatRoomRepository.findByParticipantsContaining(user);
+        List<ChatRoom> chatRooms = chatRoomRepository.findByParticipantsContaining(user);
+        return chatRooms.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public ChatRoom createChatRoom(ChatRoomRequest chatRoomRequest) {
+    public ChatRoomResponseDTO createChatRoom(ChatRoomRequest chatRoomRequest) {
         User author = userRepository.getUserById(chatRoomRequest.getUserId());
         if (author == null) {
             throw new RuntimeException("Author not found");
@@ -60,7 +68,19 @@ public class ChatService {
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setAuthor(author);
         chatRoom.setName(chatRoomRequest.getName());
-        return chatRoomRepository.save(chatRoom);
+        chatRoomRepository.save(chatRoom);
+        return convertToDto(chatRoom);
+    }
+
+    private ChatRoomResponseDTO convertToDto(ChatRoom chatRoom) {
+        ChatRoomResponseDTO dto = new ChatRoomResponseDTO();
+        dto.setId(chatRoom.getId());
+        dto.setRoomName(chatRoom.getName());
+        dto.setAuthorId(chatRoom.getAuthor().getId());
+        dto.setAuthorName(chatRoom.getAuthor().getFullName());
+        dto.setMaxParticipants(chatRoom.getMaxParticipants());
+        dto.setParticipantNames(chatRoom.getParticipants().stream().map(User::getFullName).collect(Collectors.toList()));
+        return dto;
     }
 
     @Transactional
@@ -119,8 +139,21 @@ public class ChatService {
         return chatMessageRepository.save(chatMessage);
     }
 
-    public List<ChatMessage> getRoomChatHistory(Long roomId) {
-        return chatMessageRepository.findByChatRoomIdOrderByTimestampAsc(roomId);
+    public List<ChatMessageDto> getRoomChatHistory(Long roomId) {
+        List<ChatMessage> mgs = chatMessageRepository.findByChatRoomIdOrderByTimestampAsc(roomId);
+        return mgs.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private ChatMessageDto convertToDto(ChatMessage chatMessage) {
+        ChatMessageDto dto = new ChatMessageDto();
+        dto.setId(chatMessage.getId());
+        dto.setContent(chatMessage.getContent());
+        dto.setSender(chatMessage.getSenderUser().getFullName());
+        dto.setChatRoomId(String.valueOf(chatMessage.getChatRoom().getId()));
+        dto.setCreatedAt(chatMessage.getTimestamp());
+        return dto;
     }
 
     public List<ChatMessage> getRoomChatHistorySince(Long roomId, LocalDateTime since) {

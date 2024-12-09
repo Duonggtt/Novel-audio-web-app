@@ -1,5 +1,6 @@
 package com.spring3.oauth.jwt.repositories;
 
+import com.spring3.oauth.jwt.entity.Tier;
 import com.spring3.oauth.jwt.helpers.RefreshableCRUDRepository;
 import com.spring3.oauth.jwt.entity.User;
 import org.springframework.data.jpa.repository.Query;

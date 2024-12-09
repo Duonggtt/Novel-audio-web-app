@@ -3,6 +3,7 @@ package com.spring3.oauth.jwt.controllers;
 import com.spring3.oauth.jwt.entity.ChatMessage;
 import com.spring3.oauth.jwt.entity.ChatRoom;
 import com.spring3.oauth.jwt.entity.enums.MessageTypeEnum;
+import com.spring3.oauth.jwt.models.dtos.ChatRoomResponseDTO;
 import com.spring3.oauth.jwt.services.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -32,12 +33,12 @@ public class ChatMessageController {
     }
 
     @GetMapping("/rooms/user/{userId}")
-    public List<ChatRoom> getUserChatRooms(@PathVariable Long userId) {
+    public List<ChatRoomResponseDTO> getUserChatRooms(@PathVariable Long userId) {
         return chatService.getUserChatRooms(userId);
     }
 
     @GetMapping("/history/{roomId}")
-    public List<ChatMessage> getChatHistory(@PathVariable Long roomId) {
+    public List<?> getChatHistory(@PathVariable Long roomId) {
         return chatService.getRoomChatHistory(roomId);
     }
 

@@ -19,14 +19,13 @@ public class ChatroomController {
     private final ChatService chatService;
     @PostMapping("/chat-rooms/create")
     @PreAuthorize("hasRole('ROLE_AUTHOR')")
-    public ResponseEntity<ChatRoom> createChatRoom(
+    public ResponseEntity<?> createChatRoom(
             @RequestBody ChatRoomRequest chatRoomRequest
     ) {
-        ChatRoom chatRoom = chatService.createChatRoom(chatRoomRequest);
-        return ResponseEntity.ok(chatRoom);
+        return ResponseEntity.ok(chatService.createChatRoom(chatRoomRequest));
     }
 
-    @PostMapping("/chat-rooms/{chatRoomId}/join")
+    @PostMapping("/chat-rooms/join")
     public ResponseEntity<Void> joinChatRoom(
             @RequestBody JoinChatRequest joinChatRequest
             ) {
