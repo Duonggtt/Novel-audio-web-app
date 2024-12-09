@@ -10,6 +10,7 @@ import com.spring3.oauth.jwt.models.request.UpsertNovelRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface NovelService {
     List<Novel> getAllNovels();
@@ -35,4 +36,6 @@ public interface NovelService {
     List<String> getLikedNovelSlugsByUser(Long userId);
     PagedResponseDTO findAllByAuthorAuthName(String authorName, Pageable pageable);
     List<String> getLikedNovelIdsByUserForSpecificNovels(Long userId, List<Integer> novelIds);
+    Map<String, Integer> getNovelCountByGenre();
+    Map<String, Integer> getLikeCountsForLastWeek();
 }
