@@ -124,4 +124,11 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
 
     Novel findByTitle(String title);
 
+    @Query("SELECT COUNT(n) " +
+        "FROM Novel n " +
+        "JOIN n.author a " +
+        "JOIN n.genres g " +
+        "WHERE g.id = ?1")
+    int countByGenres(Integer genreIds);
+
 }

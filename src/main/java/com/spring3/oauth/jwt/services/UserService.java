@@ -11,6 +11,7 @@ import com.spring3.oauth.jwt.models.request.UserRequest;
 import com.spring3.oauth.jwt.models.response.UserResponse;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface UserService {
@@ -40,4 +41,6 @@ public interface UserService {
     List<FollowResponseDTO> getAuthorFollowers(long authorId);
     List<FollowResponseDTO> getUserFollowing(String username);
     int getFollowerCount(long authorId);
+    Map<String, Integer> getAllUsersQuantityForEachLevel();
+    Map<String, Integer> getUserCountByScoreRange();
 }

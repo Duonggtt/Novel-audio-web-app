@@ -31,10 +31,7 @@ import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -353,6 +350,49 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User not found with username: " + username);
         }
         return userId;
+    }
+
+    @Override
+    public Map<String, Integer> getAllUsersQuantityForEachLevel() {
+        Map<String, Integer> result = new HashMap<>();
+        List<Tier> tiers = tierRepository.findAll();
+        for (Tier tier : tiers) {
+            int count = userRepository.countAllByTierId(tier.getId());
+            result.put(tier.getName(), count);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Integer> getUserCountByScoreRange() {
+        List<User> users = (List<User>) userRepository.findAll();
+        Map<String, Integer> scoreRanges = new LinkedHashMap<>();
+
+        List<int[]> ranges = List.of(
+            new int[]{0, 999},
+            new int[]{1000, 4999},
+            new int[]{5000, 9999},
+            new int[]{10000, 49999},
+            new int[]{50000, 100000}
+        );
+
+        for (int[] range : ranges) {
+            String key = (range[0] == 50000) ? "50000+" : range[0] + "-" + range[1];
+            scoreRanges.put(key, 0);
+        }
+
+        for (User user : users) {
+            int score = user.getPoint();
+            for (int[] range : ranges) {
+                if (score >= range[0] && score <= range[1]) {
+                    String key = range[0] + "-" + range[1];
+                    scoreRanges.put(key, scoreRanges.get(key) + 1);
+                    break;
+                }
+            }
+        }
+
+        return scoreRanges;
     }
 
     @Override

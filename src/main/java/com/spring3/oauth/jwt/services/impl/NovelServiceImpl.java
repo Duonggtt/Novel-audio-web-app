@@ -21,7 +21,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -100,6 +102,17 @@ public class NovelServiceImpl implements NovelService {
         // Tạo đối tượng PaginationDTO
         PaginationDTO pagination = new PaginationDTO(recommendNovelList.getNumber(), recommendNovelList.getSize(), recommendNovelList.getTotalElements());
         return new PagedResponseDTO(novelDTOs, pagination);
+    }
+
+    @Override
+    public Map<String, Integer> getNovelCountByGenre() {
+        Map<String, Integer> result = new HashMap<>();
+        List<Genre> genres = genreRepository.findAll();
+        for (Genre genre : genres) {
+            int count = novelRepository.countByGenres(genre.getId());
+            result.put(genre.getName(), count);
+        }
+        return result;
     }
 
     @Override

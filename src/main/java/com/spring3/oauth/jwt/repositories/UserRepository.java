@@ -1,5 +1,6 @@
 package com.spring3.oauth.jwt.repositories;
 
+import com.spring3.oauth.jwt.entity.Tier;
 import com.spring3.oauth.jwt.helpers.RefreshableCRUDRepository;
 import com.spring3.oauth.jwt.entity.User;
 import org.springframework.data.jpa.repository.Query;
@@ -24,4 +25,7 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
    List<User> findFourUsersHaveHighestScore();
    @Query("SELECT u FROM User u WHERE u.username = ?1 AND u.id = ?2")
    User findByUsernameAndId(String username, long id);
+
+   @Query("SELECT COUNT(u) FROM User u WHERE u.tier.id = ?1")
+   int countAllByTierId(long tier);
 }
