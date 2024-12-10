@@ -8,11 +8,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Data
+@ToString
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

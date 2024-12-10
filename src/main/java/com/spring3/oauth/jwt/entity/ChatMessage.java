@@ -6,11 +6,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Data
+@ToString
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@AllArgsConstructor
 public class ChatMessage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
