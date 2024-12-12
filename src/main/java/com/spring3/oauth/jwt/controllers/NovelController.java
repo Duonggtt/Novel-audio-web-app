@@ -5,8 +5,8 @@ import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
 import com.spring3.oauth.jwt.models.request.UpdateNovelRequest;
 import com.spring3.oauth.jwt.models.request.UpsertNovelRequest;
+import com.spring3.oauth.jwt.services.RedisService;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
-import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +26,7 @@ import java.util.List;
 public class NovelController {
 
     private final NovelServiceImpl novelService;
-    private final UserServiceImpl userService;
+    private final RedisService redisService;
 
     @GetMapping("/")
     public ResponseEntity<?> getAllNovels() {
@@ -138,6 +138,7 @@ public class NovelController {
     @PostMapping("/like/{slug}")
     public ResponseEntity<Boolean> likeNovel(@PathVariable String slug, @RequestParam long userId) {
         boolean isLiked = novelService.likeNovel(userId, slug);
+        redisService.incrementApiCall("like");
         return ResponseEntity.ok(isLiked);
     }
 }

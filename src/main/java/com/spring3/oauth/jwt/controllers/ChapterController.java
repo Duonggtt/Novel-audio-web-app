@@ -1,6 +1,7 @@
 package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.models.request.UpsertChapterRequest;
+import com.spring3.oauth.jwt.services.RedisService;
 import com.spring3.oauth.jwt.services.impl.ChapterServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class ChapterController {
 
     private final ChapterServiceImpl chapterService;
+    private final RedisService redisService;
 
     @GetMapping("/{slug}")
     public ResponseEntity<?> getAllChaptersInNovel(@PathVariable String slug) {
@@ -34,6 +36,7 @@ public class ChapterController {
 
     @GetMapping("/{slug}/chap-{chapNo}")
     public ResponseEntity<?> getChapterDetailInNovel(@PathVariable String slug, @PathVariable int chapNo) {
+        redisService.incrementApiCall("read-chapter");
         return ResponseEntity.ok(chapterService.getChapterByChapNoInNovel(slug, chapNo));
     }
 

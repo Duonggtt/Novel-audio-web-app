@@ -1,6 +1,7 @@
 package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.models.request.CreateCommentRequest;
+import com.spring3.oauth.jwt.services.RedisService;
 import com.spring3.oauth.jwt.services.impl.CommentServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 public class CommentController {
     private final CommentServiceImpl commentService;
 
+    private final RedisService redisService;
+
     @GetMapping("/{slug}")
     public ResponseEntity<?> getAllCommentsInNovel(@PathVariable String slug) {
         return ResponseEntity.ok(commentService.getAllCommentsInNovel(slug));
@@ -20,6 +23,7 @@ public class CommentController {
 
     @PostMapping("/post-comment")
     public ResponseEntity<?> saveComment(@RequestBody CreateCommentRequest request) {
+        redisService.incrementApiCall("post-comment");
         return ResponseEntity.ok(commentService.saveComment(request));
     }
 
