@@ -1,6 +1,6 @@
 package com.spring3.oauth.jwt.services;
 
-import com.spring3.oauth.jwt.entity.Report;
+import com.spring3.oauth.jwt.entity.UserActivityReport;
 import com.spring3.oauth.jwt.repositories.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,9 +14,9 @@ public class ReportService {
     @Autowired
     private ReportRepository reportRepository;
 
-    public List<Report> getReportsWithAllHours(String date, String apiPath) {
+    public List<UserActivityReport> getReportsWithAllHours(String date, String apiPath) {
         // Lấy báo cáo hiện có
-        List<Report> existingReports = apiPath != null
+        List<UserActivityReport> existingReports = apiPath != null
             ? reportRepository.findByDateAndApiPath(date, apiPath)
             : reportRepository.findByDate(date);
 
@@ -24,15 +24,15 @@ public class ReportService {
         return fillMissingHours(existingReports, date, apiPath);
     }
 
-    private List<Report> fillMissingHours(List<Report> existingReports, String date, String apiPath) {
+    private List<UserActivityReport> fillMissingHours(List<UserActivityReport> existingUserActivityReports, String date, String apiPath) {
         // Tạo danh sách 24 giờ với count mặc định là 0
         return IntStream.range(0, 24)
             .mapToObj(hour -> {
                 String hourStr = String.format("%02d", hour);
-                return existingReports.stream()
+                return existingUserActivityReports.stream()
                     .filter(r -> r.getHour().equals(hourStr))
                     .findFirst()
-                    .orElse(Report.builder()
+                    .orElse(UserActivityReport.builder()
                         .date(date)
                         .apiPath(apiPath)
                         .hour(hourStr)

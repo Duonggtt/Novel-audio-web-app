@@ -1,8 +1,7 @@
 package com.spring3.oauth.jwt.services;
 
-import com.spring3.oauth.jwt.entity.Report;
+import com.spring3.oauth.jwt.entity.UserActivityReport;
 import com.spring3.oauth.jwt.repositories.ReportRepository;
-import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +42,7 @@ public class ScheduledTask {
                     int count = countStr != null ? Integer.parseInt(countStr) : 0;
 
                     // Tạo báo cáo
-                    Report report = Report.builder()
+                    UserActivityReport report = UserActivityReport.builder()
                         .date(dateKey)
                         .apiPath(apiPath)
                         .hour(hour)

@@ -1,7 +1,6 @@
 package com.spring3.oauth.jwt.controllers;
 
-import com.spring3.oauth.jwt.entity.Report;
-import com.spring3.oauth.jwt.repositories.ReportRepository;
+import com.spring3.oauth.jwt.entity.UserActivityReport;
 import com.spring3.oauth.jwt.services.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/yesterday")
-    public List<Report> getReports(@RequestParam(required = false) String apiPath) {
+    public List<UserActivityReport> getReports(@RequestParam(required = false) String apiPath) {
 
         // Lấy ngày hôm qua
         String yesterday = LocalDate.now().minusDays(1)

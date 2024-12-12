@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Table(name = "REPORTS")
-public class Report {
+public class UserActivityReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;  // UUID hoặc String để làm ID
