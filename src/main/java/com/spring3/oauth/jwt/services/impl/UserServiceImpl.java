@@ -232,13 +232,7 @@ public class UserServiceImpl implements UserService {
         user.setPoint(1);
         user.setSelectedGenres(null);
         user.setHobbies(null);
-        CoinWallet wallet = new CoinWallet();
-        wallet.setId("wallet_" + user.getId());
-        wallet.setCoinAmount(0);
-        wallet.setCoinSpent(0);
-        wallet.setCreatedDate(LocalDate.now());
-        walletRepository.save(wallet);
-        user.setWallet(wallet);
+        user.setWallet(null);
         if(userRequest.getId() != null){
             User oldUser = userRepository.findFirstById(userRequest.getId());
             if(oldUser != null){
@@ -264,6 +258,15 @@ public class UserServiceImpl implements UserService {
             }
         } else {
 //            user.setCreatedBy(currentUser);
+            userRepository.save(user);
+
+            CoinWallet wallet = new CoinWallet();
+            wallet.setId("wallet_" + user.getId());
+            wallet.setCoinAmount(0);
+            wallet.setCoinSpent(0);
+            wallet.setCreatedDate(LocalDate.now());
+            walletRepository.save(wallet);
+            user.setWallet(wallet);
             savedUser = userRepository.save(user);
         }
         userRepository.refresh(savedUser);
