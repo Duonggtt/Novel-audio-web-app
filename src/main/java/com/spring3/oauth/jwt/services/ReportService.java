@@ -14,14 +14,17 @@ public class ReportService {
     @Autowired
     private ReportRepository reportRepository;
 
-    public List<UserActivityReport> getReportsWithAllHours(String date, String apiPath) {
-        // Lấy báo cáo hiện có
-        List<UserActivityReport> existingReports = apiPath != null
-            ? reportRepository.findByDateAndApiPath(date, apiPath)
-            : reportRepository.findByDate(date);
+    public List<List<UserActivityReport>> getReportsWithAllHours(String date) {
+        // Lấy báo cáo hiện có cho cả 2 api (comments và read-chapter)
+        List<UserActivityReport> commentReports = reportRepository.findByDateAndApiPath(date, "comments");
+        List<UserActivityReport> readChapterReports = reportRepository.findByDateAndApiPath(date, "read-chapter");
 
-        // Điền các giờ còn thiếu
-        return fillMissingHours(existingReports, date, apiPath);
+        // Điền các giờ còn thiếu cho cả 2 api
+        List<UserActivityReport> filledCommentReports = fillMissingHours(commentReports, date, "comments");
+        List<UserActivityReport> filledReadChapterReports = fillMissingHours(readChapterReports, date, "read-chapter");
+
+        // Trả về một danh sách chứa 2 danh sách con: 1 cho comments và 1 cho read-chapter
+        return List.of(filledCommentReports, filledReadChapterReports);
     }
 
     private List<UserActivityReport> fillMissingHours(List<UserActivityReport> existingReports, String date, String apiPath) {
@@ -30,7 +33,7 @@ public class ReportService {
             .mapToObj(hour -> {
                 String hourStr = String.format("%02d", hour);
                 return existingReports.stream()
-                    .filter(r -> r.getHour().equals(hourStr))
+                    .filter(r -> r.getApiPath().equals(apiPath) && r.getHour().equals(hourStr))
                     .findFirst()
                     .orElse(UserActivityReport.builder()
                         .date(date)

@@ -19,12 +19,12 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/yesterday")
-    public List<UserActivityReport> getReports(@RequestParam(required = false) String apiPath) {
+    public List<List<UserActivityReport>> getReports() {
 
         // Lấy ngày hôm qua
         String yesterday = LocalDate.now().minusDays(1)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-        return reportService.getReportsWithAllHours(yesterday, apiPath);
+        return reportService.getReportsWithAllHours(yesterday);
     }
 }

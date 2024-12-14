@@ -23,7 +23,7 @@ public class CommentController {
 
     @PostMapping("/post-comment")
     public ResponseEntity<?> saveComment(@RequestBody CreateCommentRequest request) {
-        redisService.incrementApiCall("post-comment");
+        redisService.incrementApiCall("comments");
         return ResponseEntity.ok(commentService.saveComment(request));
     }
 

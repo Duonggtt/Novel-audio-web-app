@@ -22,9 +22,9 @@ public class ScheduledTask {
     private ReportRepository reportRepository; // Giả sử bạn có repository để lưu vào DB
     private static final Logger log = LoggerFactory.getLogger(ScheduledTask.class);
 
-    @Scheduled(cron = "0 0 * * * ?") // Chạy mỗi giờ vào phút 0
+    @Scheduled(cron = "0 0 0 * * ?") // Chạy mỗi ngày vào lúc 00:00
     public void saveReportToDatabase() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now();
         String dateKey = yesterday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
         // Tìm các key theo pattern

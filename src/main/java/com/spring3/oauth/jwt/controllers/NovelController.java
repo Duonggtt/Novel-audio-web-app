@@ -138,7 +138,6 @@ public class NovelController {
     @PostMapping("/like/{slug}")
     public ResponseEntity<Boolean> likeNovel(@PathVariable String slug, @RequestParam long userId) {
         boolean isLiked = novelService.likeNovel(userId, slug);
-        redisService.incrementApiCall("like");
         return ResponseEntity.ok(isLiked);
     }
 }
