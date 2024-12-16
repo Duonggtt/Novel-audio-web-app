@@ -1,5 +1,6 @@
 package com.spring3.oauth.jwt.controllers;
 
+import com.spring3.oauth.jwt.services.ReportService;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
 import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class DashboardController {
 
     private final UserServiceImpl userService;
     private final NovelServiceImpl novelService;
+    private final ReportService reportService;
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/user-tiers")
@@ -47,6 +49,12 @@ public class DashboardController {
     @GetMapping("/likes")
     public ResponseEntity<?> getNovelLikesForWeek() {
         return ResponseEntity.ok(userService.getTotalLikeCountsForLastWeek());
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/amounts")
+    public ResponseEntity<?> getAmountReportsPerWeek() {
+        return ResponseEntity.ok(reportService.getPayReport());
     }
 
 }
