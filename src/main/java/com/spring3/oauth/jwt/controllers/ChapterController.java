@@ -9,7 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,6 +21,16 @@ public class ChapterController {
 
     private final ChapterServiceImpl chapterService;
     private final RedisService redisService;
+
+    @PostMapping("/thumbnail/upload")
+    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = chapterService.uploadImage(file);
+            return ResponseEntity.ok(imageUrl);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @GetMapping("/{slug}")
     public ResponseEntity<?> getAllChaptersInNovel(@PathVariable String slug) {
@@ -41,11 +53,13 @@ public class ChapterController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> saveChapter(@Valid @RequestBody UpsertChapterRequest request) {
         return ResponseEntity.ok(chapterService.saveChapter(request));
     }
 
     @PutMapping("/{slug}/chap-{chapNo}/update")
+    @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updateChapter(@PathVariable String slug, @PathVariable int chapNo, @Valid @RequestBody UpsertChapterRequest request) {
         return ResponseEntity.ok(chapterService.updateChapter(chapNo, slug, request));
     }
