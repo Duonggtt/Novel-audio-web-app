@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -36,6 +37,16 @@ public class NovelController {
     @GetMapping("/{slug}")
     public ResponseEntity<?> getNovelBySlug(@PathVariable String slug, @RequestParam long userId) {
         return ResponseEntity.ok(novelService.getDetailNovel(slug, userId));
+    }
+
+    @PostMapping("/thumbnail/upload")
+    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = novelService.uploadImage(file);
+            return ResponseEntity.ok(imageUrl);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/trending")

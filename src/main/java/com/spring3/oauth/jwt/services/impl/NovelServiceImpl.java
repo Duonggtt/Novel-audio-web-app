@@ -16,15 +16,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +45,52 @@ public class NovelServiceImpl implements NovelService {
     private final RateRepository rateRepository;
     private final UserRateRepository userRateRepository;
 
+
+    public String uploadImage(MultipartFile file) throws IOException {
+        // Validate file
+        validateImageFile(file);
+
+        // Generate unique filename
+        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+        String fileExtension = getFileExtension(originalFilename);
+        String uniqueFilename = UUID.randomUUID() + "." + fileExtension;
+
+        // Create the upload directory if it doesn't exist
+        Path uploadPath = Paths.get("/www/wwwroot/Audio/photo").toAbsolutePath().normalize();
+        Files.createDirectories(uploadPath);
+
+        // Save file to server
+        Path targetLocation = uploadPath.resolve(uniqueFilename);
+        Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+        // Construct URL path
+        String fileUrl = "/Audio/photo/" + uniqueFilename;
+        return fileUrl;
+    }
+
+    private void validateImageFile(MultipartFile file) {
+        // Check if file is empty
+        if (file.isEmpty()) {
+            throw new RuntimeException("Cannot upload empty file");
+        }
+
+        // Check file size (e.g., max 5MB)
+        long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new RuntimeException("File size exceeds maximum limit of 5MB");
+        }
+
+        // Check content type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new RuntimeException("Only image files are allowed");
+        }
+    }
+
+    private String getFileExtension(String filename) {
+        int dotIndex = filename.lastIndexOf(".");
+        return (dotIndex == -1) ? "" : filename.substring(dotIndex + 1);
+    }
 
     @Override
     public List<Novel> getAllNovels() {

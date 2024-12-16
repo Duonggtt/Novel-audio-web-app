@@ -1,6 +1,7 @@
 package com.spring3.oauth.jwt.entity;
 
 
+import com.spring3.oauth.jwt.entity.enums.ChatRoomTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,12 +21,11 @@ public class ChatRoom {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "author_id")
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
 
     private String name;
-    private Integer maxParticipants = 30;
-
+    private Integer maxParticipants = 100;
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
     private Set<ChatMessage> messages;
 
@@ -36,4 +36,6 @@ public class ChatRoom {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> participants = new HashSet<>();
+    @Enumerated(EnumType.STRING)
+    private ChatRoomTypeEnum roomType;
 }
