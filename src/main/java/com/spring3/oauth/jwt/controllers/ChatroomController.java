@@ -2,6 +2,7 @@ package com.spring3.oauth.jwt.controllers;
 
 
 import com.spring3.oauth.jwt.entity.ChatRoom;
+import com.spring3.oauth.jwt.models.dtos.ChatRoomResponseDTO;
 import com.spring3.oauth.jwt.models.request.ChatRoomRequest;
 import com.spring3.oauth.jwt.models.request.JoinChatRequest;
 import com.spring3.oauth.jwt.services.ChatService;
@@ -34,8 +35,8 @@ public class ChatroomController {
     }
 
     @GetMapping("/chat-rooms")
-    public ResponseEntity<List<ChatRoom>> getAllChatRooms() {
-        List<ChatRoom> chatRooms = chatService.getAllChatRooms();
+    public ResponseEntity<List<?>> getAllChatRooms(@RequestParam Long userId) {
+        List<ChatRoomResponseDTO> chatRooms = chatService.getAllAvailableChatRooms(userId);
         return ResponseEntity.ok(chatRooms);
     }
 

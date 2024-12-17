@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class ChatRoomResponseDTO {
     private long id;
-    private long authorId;
+    private Long authorId;
     private String authorName;
     private String roomName;
     private int maxParticipants;

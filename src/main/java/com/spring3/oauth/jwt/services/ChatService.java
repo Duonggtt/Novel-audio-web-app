@@ -3,6 +3,7 @@ package com.spring3.oauth.jwt.services;
 import com.spring3.oauth.jwt.entity.ChatMessage;
 import com.spring3.oauth.jwt.entity.ChatRoom;
 import com.spring3.oauth.jwt.entity.User;
+import com.spring3.oauth.jwt.entity.enums.ChatRoomTypeEnum;
 import com.spring3.oauth.jwt.models.dtos.ChapterResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.ChatMessageDto;
 import com.spring3.oauth.jwt.models.dtos.ChatRoomResponseDTO;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,6 +43,23 @@ public class ChatService {
         return chatRoomRepository.findByAuthorId(authorId);
     }
 
+
+
+    @Transactional(readOnly = true)
+    public List<ChatRoomResponseDTO> getAllAvailableChatRooms(Long userId) {
+        User user = userRepository.getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        List<ChatRoom> availableRooms = chatRoomRepository.findAvailableChatRooms(ChatRoomTypeEnum.PUBLIC, ChatRoomTypeEnum.PRIVATE, userId);
+        return availableRooms.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+
+
     @Transactional(readOnly = true)
     public List<ChatRoomResponseDTO> getUserChatRooms(Long userId) {
         User user = userRepository.getUserById(userId);
@@ -60,26 +79,40 @@ public class ChatService {
             throw new RuntimeException("Author not found");
         }
 
-        // Check if user has ROLE_AUTHOR
-//        if (!userRepository.hasAuthorRole(chatRoomRequest.getUserId())) {
-//            throw new RuntimeException("Only authors can create chat rooms");
-//        }
-
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setAuthor(author);
         chatRoom.setName(chatRoomRequest.getName());
+
+        // Set room type
+        chatRoom.setRoomType(
+                chatRoomRequest.getRoomType() != null
+                        ? chatRoomRequest.getRoomType()
+                        : ChatRoomTypeEnum.PRIVATE
+        );
+
         chatRoomRepository.save(chatRoom);
         return convertToDto(chatRoom);
     }
+
 
     private ChatRoomResponseDTO convertToDto(ChatRoom chatRoom) {
         ChatRoomResponseDTO dto = new ChatRoomResponseDTO();
         dto.setId(chatRoom.getId());
         dto.setRoomName(chatRoom.getName());
-        dto.setAuthorId(chatRoom.getAuthor().getId());
-        dto.setAuthorName(chatRoom.getAuthor().getFullName());
-        dto.setMaxParticipants(chatRoom.getMaxParticipants());
-        dto.setParticipantNames(chatRoom.getParticipants().stream().map(User::getFullName).collect(Collectors.toList()));
+
+        // Add null check for author
+        if (chatRoom.getAuthor() != null) {
+            dto.setAuthorId(chatRoom.getAuthor().getId());
+            dto.setAuthorName(chatRoom.getAuthor().getFullName());
+        } else {
+            // Set default values or null for author fields
+            dto.setAuthorId(null);
+            dto.setAuthorName("Unknown");
+        }
+
+        dto.setParticipantNames(chatRoom.getParticipants().stream()
+                .map(User::getFullName)
+                .collect(Collectors.toList()));
         return dto;
     }
 
@@ -93,15 +126,19 @@ public class ChatService {
             throw new RuntimeException("User not found");
         }
 
-        // Check if user follows the author using User entity relationships
-        User author = chatRoom.getAuthor();
-        if (!author.getFollowers().contains(user)) {
-            throw new RuntimeException("You must follow the author to join this chat room");
-        }
+        // Different join logic based on room type
+        switch (chatRoom.getRoomType()) {
+            case PUBLIC:
+                // Anyone can join public rooms
+                break;
 
-        // Check room capacity
-        if (chatRoom.getParticipants().size() >= chatRoom.getMaxParticipants()) {
-            throw new RuntimeException("Chat room is full");
+            case PRIVATE:
+                // Only followers can join private rooms
+                User author = chatRoom.getAuthor();
+                if (!author.getFollowers().contains(user)) {
+                    throw new RuntimeException("You must follow the author to join this private chat room");
+                }
+                break;
         }
 
         chatRoom.getParticipants().add(user);
@@ -146,19 +183,18 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 
-    private ChatMessageDto convertToDto(ChatMessage chatMessage) {
+    public ChatMessageDto convertToDto(ChatMessage chatMessage) {
         ChatMessageDto dto = new ChatMessageDto();
         dto.setId(chatMessage.getId());
         dto.setContent(chatMessage.getContent());
-        dto.setSender(chatMessage.getSenderUser().getFullName());
+    // Get sender name from repository
+        User sender = userRepository.findFirstById(chatMessage.getSenderUser().getId());
+        dto.setSender(sender != null ? sender.getFullName() : "Unknown User");
         dto.setChatRoomId(String.valueOf(chatMessage.getChatRoom().getId()));
         dto.setCreatedAt(chatMessage.getTimestamp());
         return dto;
     }
 
-    public List<ChatMessage> getRoomChatHistorySince(Long roomId, LocalDateTime since) {
-        return chatMessageRepository.findByChatRoomIdAndTimestampGreaterThanOrderByTimestampAsc(roomId, since);
-    }
 
     @Transactional(readOnly = true)
     public void validateUserInRoom(Long userId, Long roomId) {
@@ -186,9 +222,6 @@ public class ChatService {
             throw new RuntimeException("You must follow the author to join this chat room");
         }
 
-        if (chatRoom.getParticipants().size() >= chatRoom.getMaxParticipants()) {
-            throw new RuntimeException("Chat room is full");
-        }
 
         if (!chatRoom.getParticipants().contains(user)) {
             chatRoom.getParticipants().add(user);
