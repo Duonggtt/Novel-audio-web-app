@@ -18,4 +18,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Payment findFirstByUserIdAndOrderInfoContainingOrderByIdDesc(long userId, String orderInfo);
     @Query("select p from Payment p where p.user.id = ?1")
     List<Payment> findAllUserById(long userId);
+
+    @Query("SELECT SUM(p.amount) FROM Payment p")
+    long sumAllAmount();
 }

@@ -370,34 +370,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Integer> getUserCountByScoreRange() {
-        List<User> users = (List<User>) userRepository.findAll();
-        Map<String, Integer> scoreRanges = new LinkedHashMap<>();
-
-        List<int[]> ranges = List.of(
-            new int[]{0, 999},
-            new int[]{1000, 4999},
-            new int[]{5000, 9999},
-            new int[]{10000, 49999},
-            new int[]{50000, 100000}
-        );
-
-        for (int[] range : ranges) {
-            String key = (range[0] == 50000) ? "50000+" : range[0] + "-" + range[1];
-            scoreRanges.put(key, 0);
-        }
-
-        for (User user : users) {
-            int score = user.getPoint();
-            for (int[] range : ranges) {
-                if (score >= range[0] && score <= range[1]) {
-                    String key = range[0] + "-" + range[1];
-                    scoreRanges.put(key, scoreRanges.get(key) + 1);
-                    break;
-                }
-            }
-        }
-
-        return scoreRanges;
+        List<Object[]> results = userRepository.getUserCountByScoreRange();
+        return results.stream()
+            .collect(Collectors.toMap(
+                arr -> (String) arr[0],
+                arr -> ((Number) arr[1]).intValue(),
+                (v1, v2) -> v1,
+                LinkedHashMap::new
+            ));
     }
 
     @Override

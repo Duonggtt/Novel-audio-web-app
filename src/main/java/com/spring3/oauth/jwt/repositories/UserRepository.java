@@ -28,4 +28,30 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
    User getUserById(long id);
    @Query("SELECT COUNT(u) FROM User u WHERE u.tier.id = ?1")
    int countAllByTierId(long tier);
+
+   @Query("SELECT SUM(u.chapterReadCount) FROM User u")
+   long countAllReadCounts();
+
+   @Query(nativeQuery = true, value = """
+        SELECT 
+            CASE 
+                WHEN point BETWEEN 0 AND 99 THEN '0-99'
+                WHEN point BETWEEN 100 AND 499 THEN '100-499'
+                WHEN point BETWEEN 500 AND 999 THEN '500-999'
+                WHEN point BETWEEN 1000 AND 4999 THEN '1000-4999'
+                WHEN point >= 5000 THEN '5000+'
+            END AS score_range,
+            COUNT(*) as user_count
+        FROM users
+        GROUP BY score_range
+        ORDER BY 
+            CASE score_range
+                WHEN '0-99' THEN 1
+                WHEN '100-499' THEN 2
+                WHEN '500-999' THEN 3
+                WHEN '1000-4999' THEN 4
+                WHEN '5000+' THEN 5
+            END
+    """)
+   List<Object[]> getUserCountByScoreRange();
 }

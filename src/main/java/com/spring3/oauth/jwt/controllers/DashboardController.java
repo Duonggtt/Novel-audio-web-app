@@ -57,4 +57,10 @@ public class DashboardController {
         return ResponseEntity.ok(reportService.getPayReport());
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/quantity-info")
+    public ResponseEntity<?> getAllQuantityInfo() {
+        return ResponseEntity.ok(reportService.getTotalQuantityInfo());
+    }
+
 }

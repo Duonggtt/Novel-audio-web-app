@@ -3,14 +3,17 @@ package com.spring3.oauth.jwt.services;
 import com.spring3.oauth.jwt.entity.Payment;
 import com.spring3.oauth.jwt.entity.UserActivityReport;
 import com.spring3.oauth.jwt.models.dtos.PayReportResponseDTO;
-import com.spring3.oauth.jwt.repositories.ReportRepository;
+import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
+import com.spring3.oauth.jwt.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.*;
 import java.time.*;
@@ -20,6 +23,17 @@ import java.util.stream.IntStream;
 public class ReportService {
     @Autowired
     private ReportRepository reportRepository;
+
+    @Autowired
+    private NovelRepository novelRepository;
+    @Autowired
+    private ChapterRepository chapterRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private CommentRepository commentRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     public List<PayReportResponseDTO> getPayReport() {
         LocalDate endDate = LocalDate.now();  // endDate is the current day
@@ -131,5 +145,26 @@ public class ReportService {
                         .build());
             })
             .collect(Collectors.toList());
+    }
+
+    public TotalQuantityResponseDTO getTotalQuantityInfo() {
+        return CompletableFuture.supplyAsync(() -> {
+            TotalQuantityResponseDTO dto = new TotalQuantityResponseDTO();
+
+            // Sử dụng parallel stream để thực hiện các truy vấn đồng thời
+            List<CompletableFuture<Void>> futures = Arrays.asList(
+                CompletableFuture.runAsync(() -> dto.setNovelQuantity(novelRepository.count())),
+                CompletableFuture.runAsync(() -> dto.setChapterQuantity(chapterRepository.count())),
+                CompletableFuture.runAsync(() -> dto.setUserQuantity(userRepository.count())),
+                CompletableFuture.runAsync(() -> dto.setReadQuantity(userRepository.countAllReadCounts())),
+                CompletableFuture.runAsync(() -> dto.setCommentQuantity(commentRepository.count())),
+                CompletableFuture.runAsync(() -> dto.setTotalAmount(paymentRepository.sumAllAmount()))
+            );
+
+            // Đợi tất cả các future hoàn thành
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            return dto;
+        }).join();
     }
 }
