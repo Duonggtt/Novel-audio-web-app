@@ -118,8 +118,8 @@ public class NovelController {
 
     @GetMapping("/auth/my-novels")
     @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
-    public ResponseEntity<?> searchNovelsByAuthorAuthName(@RequestParam String authorName, Pageable pageable) {
-        return ResponseEntity.ok(novelService.findAllByAuthorAuthName(authorName, pageable));
+    public ResponseEntity<?> searchNovelsByAuthorAuthName(@RequestParam String username, Pageable pageable) {
+        return ResponseEntity.ok(novelService.findAllByAuthorAuthName(username, pageable));
     }
 
 

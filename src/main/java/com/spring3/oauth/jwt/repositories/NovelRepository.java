@@ -112,8 +112,8 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
             "FROM Novel n " +
             "JOIN n.author a " +
             "JOIN n.genres g " +
-            "WHERE a.fullName LIKE %?1%")
-    Page<Novel> findAllByAuthorAuthName(String authorName, Pageable pageable);
+            "WHERE a.username LIKE %?1%")
+    Page<Novel> findAllByAuthorAuthName(String username, Pageable pageable);
 
     @Query("SELECT n " +
         "FROM Novel n " +
