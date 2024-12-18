@@ -72,7 +72,7 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
             "n.totalChapters, " +
             "n.averageRatings, " +
             "n.likeCounts, " +
-            "a.name, " +
+            "a.fullName, " +
             "g.name) " +
             "FROM Novel n " +
             "JOIN n.author a " +
@@ -105,14 +105,14 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
         "FROM Novel n " +
         "JOIN n.author a " +
         "JOIN n.genres g " +
-        "WHERE n.isClosed = false AND a.name LIKE %?1%")
+        "WHERE n.isClosed = false AND a.fullName LIKE %?1%")
     Page<Novel> findAllByAuthorName(String authorName, Pageable pageable);
 
     @Query("SELECT n " +
             "FROM Novel n " +
             "JOIN n.author a " +
             "JOIN n.genres g " +
-            "WHERE a.name LIKE %?1%")
+            "WHERE a.fullName LIKE %?1%")
     Page<Novel> findAllByAuthorAuthName(String authorName, Pageable pageable);
 
     @Query("SELECT n " +

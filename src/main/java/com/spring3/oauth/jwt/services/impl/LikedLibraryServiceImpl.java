@@ -114,7 +114,7 @@ public class LikedLibraryServiceImpl implements LikedLibraryService {
         if(novel.getAuthor() == null) {
             dto.setAuthorName(null);
         }else {
-            dto.setAuthorName(novel.getAuthor().getName());
+            dto.setAuthorName(novel.getAuthor().getFullName());
         }
         if(novel.getGenres() == null) {
             dto.setGenreNames(null);

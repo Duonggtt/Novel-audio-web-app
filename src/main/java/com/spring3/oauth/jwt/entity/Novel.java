@@ -54,7 +54,7 @@ public class Novel {
 
     @ManyToOne
     @JoinColumn(name = "author_id")
-    private Author author;
+    private User author;
 
     @ManyToMany(fetch = LAZY)
     private List<Genre> genres;
