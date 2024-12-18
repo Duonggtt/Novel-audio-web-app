@@ -40,7 +40,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3388", "https://80ba-14-231-167-47.ngrok-free.app", "https://novel-audio.vercel.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
