@@ -18,6 +18,6 @@ public class UpdateNovelRequest {
     private NovelStatusEnum status;
     private String thumbnailImageUrl;
     private boolean isClosed;
-    private Integer authorId;
+    private long authorId;
     private List<Integer> genreIds;
 }

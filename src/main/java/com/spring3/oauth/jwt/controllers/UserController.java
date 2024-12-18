@@ -1,13 +1,11 @@
 package com.spring3.oauth.jwt.controllers;
 
-import com.spring3.oauth.jwt.entity.Author;
 import com.spring3.oauth.jwt.entity.RefreshToken;
 import com.spring3.oauth.jwt.entity.Role;
 import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.models.dtos.*;
 import com.spring3.oauth.jwt.models.request.*;
 import com.spring3.oauth.jwt.models.response.UserResponse;
-import com.spring3.oauth.jwt.repositories.AuthorRepository;
 import com.spring3.oauth.jwt.repositories.RoleRepository;
 import com.spring3.oauth.jwt.repositories.UserRepository;
 import com.spring3.oauth.jwt.services.EmailService;
@@ -25,9 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -52,14 +48,12 @@ public class UserController {
     private AuthenticationManager authenticationManager;
 
     private final UserRepository userRepository;
-    private final AuthorRepository authorRepository;
 
-    public UserController(EmailService emailService, RoleRepository roleRepository, RestTemplate restTemplate, UserRepository userRepository, AuthorRepository authorRepository) {
+    public UserController(EmailService emailService, RoleRepository roleRepository, RestTemplate restTemplate, UserRepository userRepository) {
         this.emailService = emailService;
         this.roleRepository = roleRepository;
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;
-        this.authorRepository = authorRepository;
     }
 
     @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
@@ -83,17 +77,7 @@ public class UserController {
         // Update user role here
         User user = userRepository.findByUsernameAndId(username, userId);
         if (user != null) {
-            if(authorRepository.findByName(user.getFullName()) != null) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(generateHtmlResponse("Conflict", "Author already exists."));
-            }
             Set<Role> roles = roleRepository.findAllByName("ROLE_AUTHOR");
-            Author author = new Author();
-            author.setName(user.getFullName());
-            author.setDob(user.getDob());
-            user.setRoles(roles);
-            authorRepository.save(author);
             userRepository.save(user);
 
             // Send acceptance notification

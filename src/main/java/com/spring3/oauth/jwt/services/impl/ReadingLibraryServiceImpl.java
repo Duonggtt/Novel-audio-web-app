@@ -84,7 +84,7 @@ public class ReadingLibraryServiceImpl implements ReadingLibraryService {
         if (novel.getAuthor() == null) {
             dto.setAuthorName(null);
         } else {
-            dto.setAuthorName(novel.getAuthor().getName());
+            dto.setAuthorName(novel.getAuthor().getFullName());
         }
         if (novel.getGenres() == null) {
             dto.setGenreNames(null);

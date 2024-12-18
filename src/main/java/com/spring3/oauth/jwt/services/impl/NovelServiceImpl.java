@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 public class NovelServiceImpl implements NovelService {
 
     private final NovelRepository novelRepository;
-    private final AuthorRepository authorRepository;
     private final GenreRepository genreRepository;
     private final UserRepository userRepository;
     private final UserLikeRepository userLikeRepository;
@@ -373,7 +372,7 @@ public class NovelServiceImpl implements NovelService {
         novel.setTotalChapters(request.getTotalChapters());
         novel.setAverageRatings(request.getAverageRatings());
         novel.setLikeCounts(request.getLikeCounts());
-        novel.setAuthor(authorRepository.findById(request.getAuthorId())
+        novel.setAuthor(userRepository.findById(request.getAuthorId())
             .orElseThrow(() -> new NotFoundException("Author not found with id " + request.getAuthorId())));
         novel.setGenres(genreRepository.findAllById(request.getGenreIds()));
 
@@ -402,7 +401,7 @@ public class NovelServiceImpl implements NovelService {
         novel.setStatus(request.getStatus());
         novel.setThumbnailImageUrl(request.getThumbnailImageUrl());
         novel.setClosed(request.isClosed());
-        novel.setAuthor(authorRepository.findById(request.getAuthorId())
+        novel.setAuthor(userRepository.findById(request.getAuthorId())
             .orElseThrow(() -> new NotFoundException("Author not found with id " + request.getAuthorId())));
         novel.setGenres(genreRepository.findAllById(request.getGenreIds()));
         return convertToDto(novelRepository.save(novel));
@@ -432,7 +431,7 @@ public class NovelServiceImpl implements NovelService {
         if(novel.getAuthor() == null) {
             dto.setAuthorName(null);
         }else {
-            dto.setAuthorName(novel.getAuthor().getName());
+            dto.setAuthorName(novel.getAuthor().getFullName());
         }
         if(novel.getGenres() == null) {
             dto.setGenreNames(null);
@@ -473,7 +472,7 @@ public class NovelServiceImpl implements NovelService {
         if(novel.getAuthor() == null) {
             dto.setAuthorName(null);
         }else {
-            dto.setAuthorName(novel.getAuthor().getName());
+            dto.setAuthorName(novel.getAuthor().getFullName());
         }
         if(novel.getGenres() == null) {
             dto.setGenreNames(null);
