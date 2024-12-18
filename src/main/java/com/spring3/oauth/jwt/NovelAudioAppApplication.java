@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableJpaRepositories(repositoryBaseClass = RefreshableCRUDRepositoryImpl.class)
 @SpringBootApplication
 @EnableScheduling
-//@PropertySource("file:.env")
+@PropertySource("file:.env")
 public class NovelAudioAppApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
