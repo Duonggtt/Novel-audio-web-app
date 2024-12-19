@@ -34,6 +34,8 @@ public class Novel {
     @Column(name = "released_at")
     private LocalDateTime releasedAt;
 
+
+    @Enumerated(EnumType.ORDINAL)
     private NovelStatusEnum status;
     private boolean isClosed;
 

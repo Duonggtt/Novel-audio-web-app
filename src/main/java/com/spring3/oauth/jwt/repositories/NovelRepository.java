@@ -116,8 +116,7 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
             "JOIN n.author a " +
             "JOIN n.genres g " +
             "WHERE a.username LIKE %?1%")
-    Page<Novel> findAllByAuthorAuthName(String username, Pageable pageable);
-
+    List<Novel> findAllByAuthorAuthName(String username);
     @Query("SELECT n " +
         "FROM Novel n " +
         "JOIN n.author a " +
@@ -176,7 +175,7 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
             COALESCE(COUNT(CASE WHEN n.status = 'COMPLETED' THEN 1 END), 0) AS completed_novels,
             COUNT(n.id) AS new_novels
         FROM novels n
-        WHERE DATE(n.released_at) BETWEEN :startDate AND :endDate
+        WHERE n.released_at >= :startDate AND n.released_at < :endDate + INTERVAL 1 DAY
         GROUP BY DATE(n.released_at)
         ORDER BY DATE(n.released_at);
         """, nativeQuery = true)
@@ -191,7 +190,7 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
             COALESCE(COUNT(CASE WHEN n.status = 'COMPLETED' THEN 1 END), 0) AS completed_novels,
             COUNT(n.id) AS new_novels
         FROM novels n
-        WHERE DATE(n.released_at) BETWEEN :startDate AND :endDate
+        WHERE n.released_at >= :startDate AND n.released_at < :endDate + INTERVAL 1 DAY
         GROUP BY DATE_FORMAT(n.released_at, '%Y-%m')
         ORDER BY DATE_FORMAT(n.released_at, '%Y-%m');
         """, nativeQuery = true)
@@ -199,6 +198,8 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+
+
 
 
 }

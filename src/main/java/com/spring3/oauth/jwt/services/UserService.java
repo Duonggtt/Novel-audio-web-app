@@ -1,14 +1,13 @@
 package com.spring3.oauth.jwt.services;
 
-import com.spring3.oauth.jwt.models.dtos.FollowResponseDTO;
-import com.spring3.oauth.jwt.models.dtos.TopReadResponseDTO;
-import com.spring3.oauth.jwt.models.dtos.TopScoreResponseDTO;
-import com.spring3.oauth.jwt.models.dtos.UserResponseDTO;
+import com.spring3.oauth.jwt.models.dtos.*;
 import com.spring3.oauth.jwt.models.request.ForgotPassRequest;
 import com.spring3.oauth.jwt.models.request.GenresSelectedRequest;
 import com.spring3.oauth.jwt.models.request.UpdateUserRequest;
 import com.spring3.oauth.jwt.models.request.UserRequest;
 import com.spring3.oauth.jwt.models.response.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,7 @@ public interface UserService {
 
     UserResponseDTO getProfile(String username);
 
-    List<UserResponse> getAllUser();
+    Page<UserResponse> getAllUser(Pageable pageable);
 
     boolean isAdmin(String username);
     void forgotPass(ForgotPassRequest request);
@@ -46,4 +45,6 @@ public interface UserService {
     Map<String, Integer> getTotalLikeCountsForLastWeek();
 
     void addPoint(int point, long userId);
+
+    List<AuthorResponseDTO> getAuthors();
 }

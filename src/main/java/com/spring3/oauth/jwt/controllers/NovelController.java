@@ -112,14 +112,14 @@ public class NovelController {
     }
 
     @GetMapping("/search/by-author")
-    public ResponseEntity<?> searchNovelsByAuthorName(@RequestParam String authorName, Pageable pageable) {
+        public ResponseEntity<?> searchNovelsByAuthorName(@RequestParam String authorName, Pageable pageable) {
         return ResponseEntity.ok(novelService.findAllByAuthorName(authorName, pageable));
     }
 
     @GetMapping("/auth/my-novels")
     @PreAuthorize("hasRole('ROLE_AUTHOR') or hasRole('ROLE_ADMIN')")
-    public ResponseEntity<?> searchNovelsByAuthorAuthName(@RequestParam String username, Pageable pageable) {
-        return ResponseEntity.ok(novelService.findAllByAuthorAuthName(username, pageable));
+    public ResponseEntity<?> searchNovelsByAuthorAuthName(@RequestParam String username) {
+        return ResponseEntity.ok(novelService.findAllByAuthorUsername(username));
     }
 
 

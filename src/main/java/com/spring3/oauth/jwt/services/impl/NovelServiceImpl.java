@@ -238,17 +238,15 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
-    public PagedResponseDTO findAllByAuthorAuthName(String username, Pageable pageable) {
-        Page<Novel> novels = novelRepository.findAllByAuthorAuthName(username, pageable);
+    public List<NovelResponseDTO> findAllByAuthorUsername(String username) {
+        List<Novel> novels = novelRepository.findAllByAuthorAuthName(username);
         if(novels.isEmpty()) {
             throw new NotFoundException("Novel not found with author username " + username);
         }
         // Mapping từ Novel sang NovelResponseDTO
-        List<NovelResponseDTO> novelDTOs = novels.stream()
+        return novels.stream()
                 .map(this::convertToDto)
                 .toList();
-        PaginationDTO pagination = new PaginationDTO(novels.getNumber(), novels.getSize(), novels.getTotalElements());
-        return new PagedResponseDTO(novelDTOs, pagination);
     }
 
     @Override

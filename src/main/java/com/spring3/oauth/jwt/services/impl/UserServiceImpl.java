@@ -4,16 +4,14 @@ import com.spring3.oauth.jwt.entity.*;
 import com.spring3.oauth.jwt.entity.Package;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
-import com.spring3.oauth.jwt.models.dtos.FollowResponseDTO;
-import com.spring3.oauth.jwt.models.dtos.TopReadResponseDTO;
-import com.spring3.oauth.jwt.models.dtos.TopScoreResponseDTO;
-import com.spring3.oauth.jwt.models.dtos.UserResponseDTO;
+import com.spring3.oauth.jwt.models.dtos.*;
 import com.spring3.oauth.jwt.models.request.ForgotPassRequest;
 import com.spring3.oauth.jwt.models.request.GenresSelectedRequest;
 import com.spring3.oauth.jwt.models.request.UpdateUserRequest;
 import com.spring3.oauth.jwt.models.request.UserRequest;
 import com.spring3.oauth.jwt.models.response.UserResponse;
 import com.spring3.oauth.jwt.repositories.*;
+import com.spring3.oauth.jwt.repositories.itf.AuthorProjection;
 import com.spring3.oauth.jwt.services.EmailService;
 import com.spring3.oauth.jwt.services.UserService;
 import org.modelmapper.ModelMapper;
@@ -21,6 +19,8 @@ import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -425,6 +425,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<AuthorResponseDTO> getAuthors() {
+        List<AuthorProjection> authors = userRepository.findAllByRoleAuthor();
+        if (authors.isEmpty()) {
+            throw new NotFoundException("No author found..!!");
+        }
+        return authors.stream()
+            .map(author -> {
+                AuthorResponseDTO dto = new AuthorResponseDTO();
+                dto.setId(author.getId());
+                dto.setFullName(author.getFullName());
+                return dto;
+            })
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public void followAuthor(String currentUsername, long authorId) {
         User currentUser = userRepository.findByUsername(currentUsername);
         User author = userRepository.findById(authorId)
@@ -593,11 +609,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> getAllUser() {
-        List<User> users = (List<User>) userRepository.findAll();
-        Type setOfDTOsType = new TypeToken<List<UserResponse>>(){}.getType();
-        List<UserResponse> userResponses = modelMapper.map(users, setOfDTOsType);
-        return userResponses;
+    public Page<UserResponse> getAllUser(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        return users.map(user -> modelMapper.map(user, UserResponse.class));
     }
 
 }

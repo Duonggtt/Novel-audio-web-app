@@ -3,6 +3,9 @@ package com.spring3.oauth.jwt.repositories;
 import com.spring3.oauth.jwt.entity.Tier;
 import com.spring3.oauth.jwt.helpers.RefreshableCRUDRepository;
 import com.spring3.oauth.jwt.entity.User;
+import com.spring3.oauth.jwt.repositories.itf.AuthorProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -58,4 +61,10 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
 
    @Query("SELECT SUM(u.chapterReadCount) FROM User u")
    long countAllReadCounts();
+
+   Page<User> findAll(Pageable pageable);
+
+   @Query("SELECT u.id AS id, u.fullName AS fullName FROM User u JOIN u.roles r WHERE r.name = 'ROLE_AUTHOR'")
+   List<AuthorProjection> findAllByRoleAuthor();
+
 }

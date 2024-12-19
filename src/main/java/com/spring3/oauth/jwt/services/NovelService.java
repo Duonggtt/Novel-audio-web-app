@@ -27,14 +27,14 @@ public interface NovelService {
     PagedResponseDTO findAllByGenre(List<Integer> genreIds, Pageable pageable);
     List<NovelResponseDTO> findSomeNovelsSameGenre(Integer genreId);
     PagedResponseDTO getAllNovelsByGenreName(String genreName, Pageable pageable);
-    PagedResponseDTO findAllByAuthorName(String authorName, Pageable pageable);
+    List<NovelResponseDTO> findAllByAuthorUsername(String username);
     PagedResponseDTO findAllByAuthorId(Integer authorId, Pageable pageable);
     PagedResponseDTO findAllByTitle(String title, Pageable pageable);
     PagedResponseDTO getAllNovelsRecommend( Long userId, Pageable pageable);
     boolean isNovelLikedByUser(long userId, String novelSlug);
     boolean likeNovel( long userId, String slug);
     List<String> getLikedNovelSlugsByUser(Long userId);
-    PagedResponseDTO findAllByAuthorAuthName(String authorName, Pageable pageable);
+    PagedResponseDTO findAllByAuthorName(String authorName, Pageable pageable);
     List<String> getLikedNovelIdsByUserForSpecificNovels(Long userId, List<Integer> novelIds);
     Map<String, Integer> getNovelCountByGenre();
     Map<String, Integer> getLikeCountsForLastWeek();

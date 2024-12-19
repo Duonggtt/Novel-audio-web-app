@@ -293,8 +293,8 @@ public class ReportService {
     }
 
     private List<NovelStatusResponseDTO> getYearlyStats() {
-        LocalDate endDate = LocalDate.now().minusYears(1).with(TemporalAdjusters.lastDayOfYear());
-        LocalDate startDate = endDate.with(TemporalAdjusters.firstDayOfYear());
+        LocalDate startDate = LocalDate.now().with(TemporalAdjusters.firstDayOfYear());
+        LocalDate endDate = LocalDate.now().with(TemporalAdjusters.lastDayOfYear());
 
         // Lấy dữ liệu từ repository
         List<NovelStatsProjection> rawData = novelRepository.getMonthlyStats(startDate, endDate);

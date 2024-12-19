@@ -15,6 +15,9 @@ import com.spring3.oauth.jwt.services.UserService;
 import com.spring3.oauth.jwt.services.impl.CoinWalletServiceImpl;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -210,14 +213,18 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> getAllUsers() {
+    public ResponseEntity<?> getAllUsers(@RequestParam(defaultValue = "0") int pageNum,
+                                         @RequestParam(defaultValue = "10") int pageSize) {
         try {
-            List<UserResponse> userResponses = userService.getAllUser();
-            return ResponseEntity.ok(userResponses);
+            Pageable pageable = PageRequest.of(pageNum, pageSize);
+            Page<UserResponse> userResponses = userService.getAllUser(pageable);
+            UserResponsePageDTO response = new UserResponsePageDTO(userResponses);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+
 
     @PostMapping("/detail")
     public ResponseEntity<UserResponse> getUserDetail() {
@@ -301,6 +308,11 @@ public class UserController {
     public ResponseEntity<?> followAuthor(@RequestParam String currentUsername, @RequestParam long authorId) {
         userService.followAuthor(currentUsername, authorId);
         return ResponseEntity.ok("Followed author successfully.");
+    }
+
+    @GetMapping("/authors/")
+    public ResponseEntity<?> getAuthors() {
+        return ResponseEntity.ok(userService.getAuthors());
     }
 
     @PostMapping("/unfollow/author")
