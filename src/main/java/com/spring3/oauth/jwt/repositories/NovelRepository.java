@@ -1,7 +1,9 @@
 package com.spring3.oauth.jwt.repositories;
 
 import com.spring3.oauth.jwt.entity.Novel;
+import com.spring3.oauth.jwt.entity.enums.NovelStatusEnum;
 import com.spring3.oauth.jwt.models.dtos.NovelResponseDTO;
+import com.spring3.oauth.jwt.repositories.itf.NovelStatsProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -156,4 +159,46 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
         "JOIN n.genres g " +
         "WHERE g.id = ?1")
     List<Novel> findAllByGenreId(Integer id);
+
+    @Query("""
+            SELECT n FROM Novel n 
+            WHERE n.releasedAt BETWEEN :startDate AND :endDate 
+            OR n.status = :status""")
+    List<Novel> findNovelsForStats(
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
+        @Param("status") NovelStatusEnum status
+    );
+
+    @Query(value = """
+        SELECT 
+            DATE(n.released_at) AS date,
+            COALESCE(COUNT(CASE WHEN n.status = 'COMPLETED' THEN 1 END), 0) AS completed_novels,
+            COUNT(n.id) AS new_novels
+        FROM novels n
+        WHERE DATE(n.released_at) BETWEEN :startDate AND :endDate
+        GROUP BY DATE(n.released_at)
+        ORDER BY DATE(n.released_at);
+        """, nativeQuery = true)
+    List<NovelStatsProjection> getDailyStats(
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = """
+        SELECT 
+            DATE_FORMAT(n.released_at, '%Y-%m') AS date,
+            COALESCE(COUNT(CASE WHEN n.status = 'COMPLETED' THEN 1 END), 0) AS completed_novels,
+            COUNT(n.id) AS new_novels
+        FROM novels n
+        WHERE DATE(n.released_at) BETWEEN :startDate AND :endDate
+        GROUP BY DATE_FORMAT(n.released_at, '%Y-%m')
+        ORDER BY DATE_FORMAT(n.released_at, '%Y-%m');
+        """, nativeQuery = true)
+    List<NovelStatsProjection> getMonthlyStats(
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
+
 }

@@ -1,16 +1,16 @@
 package com.spring3.oauth.jwt.controllers;
 
+import com.spring3.oauth.jwt.models.dtos.NovelStatusResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
 import com.spring3.oauth.jwt.services.ReportService;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
 import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,12 +45,6 @@ public class DashboardController {
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/novel-status")
-    public ResponseEntity<?> getNovelStatusForWeek() {
-        return ResponseEntity.ok(null);
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/likes")
     public ResponseEntity<?> getNovelLikesForWeek() {
         return ResponseEntity.ok(userService.getTotalLikeCountsForLastWeek());
@@ -72,6 +66,15 @@ public class DashboardController {
         metrics.forEach(metric -> response.put(metric.getName(), metric));
 
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Get novel statistics for dashboard")
+    @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully")
+    @GetMapping("/novel-status")
+    public ResponseEntity<List<NovelStatusResponseDTO>> getNovelStatus(
+        @RequestParam(defaultValue = "week") String timeRange) {
+        return ResponseEntity.ok(reportService.getNovelStatistics(timeRange));
     }
 
 }

@@ -10,5 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class NovelStatusResponseDTO {
-
+    private String date;
+    private int newNovels;
+    private int completedNovels;
 }

@@ -2,20 +2,23 @@ package com.spring3.oauth.jwt.services;
 
 import com.spring3.oauth.jwt.entity.Payment;
 import com.spring3.oauth.jwt.entity.UserActivityReport;
+import com.spring3.oauth.jwt.models.dtos.NovelStatusResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PayReportResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
 import com.spring3.oauth.jwt.repositories.*;
+import com.spring3.oauth.jwt.repositories.itf.NovelStatsProjection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.Locale;
+import java.time.temporal.ChronoUnit;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -254,5 +257,74 @@ public class ReportService {
 
     private TotalQuantityResponseDTO calculateMetricForAmount(String name, long currentValue, long previousValue) {
         return calculateMetric(name, currentValue, previousValue);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "novelStats", key = "#timeRange")
+    public List<NovelStatusResponseDTO> getNovelStatistics(String timeRange) {
+        return switch (timeRange.toLowerCase()) {
+            case "week" -> getWeeklyStats();
+            case "year" -> getYearlyStats();
+            default -> throw new IllegalArgumentException("Invalid time range");
+        };
+    }
+
+    private List<NovelStatusResponseDTO> getWeeklyStats() {
+        LocalDate endDate = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        LocalDate startDate = endDate.minusDays(6);
+
+        // Lấy dữ liệu từ repository
+        List<NovelStatsProjection> rawData = novelRepository.getDailyStats(startDate, endDate);
+
+        // Tạo danh sách các ngày trong tuần
+        Map<LocalDate, NovelStatusResponseDTO> dataMap = rawData.stream()
+            .collect(Collectors.toMap(
+                r -> LocalDate.parse(r.getDate()),
+                this::convertToDTO
+            ));
+
+        List<NovelStatusResponseDTO> fullStats = new ArrayList<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            fullStats.add(dataMap.getOrDefault(date,
+                new NovelStatusResponseDTO(date.toString(), 0, 0)));
+        }
+
+        return fullStats;
+    }
+
+    private List<NovelStatusResponseDTO> getYearlyStats() {
+        LocalDate endDate = LocalDate.now().minusYears(1).with(TemporalAdjusters.lastDayOfYear());
+        LocalDate startDate = endDate.with(TemporalAdjusters.firstDayOfYear());
+
+        // Lấy dữ liệu từ repository
+        List<NovelStatsProjection> rawData = novelRepository.getMonthlyStats(startDate, endDate);
+
+        // Tạo danh sách các tháng trong năm
+        Map<String, NovelStatusResponseDTO> dataMap = rawData.stream()
+            .collect(Collectors.toMap(
+                NovelStatsProjection::getDate,
+                this::convertToDTO
+            ));
+
+        List<NovelStatusResponseDTO> fullStats = new ArrayList<>();
+        YearMonth startMonth = YearMonth.from(startDate);
+        YearMonth endMonth = YearMonth.from(endDate);
+
+        for (YearMonth month = startMonth; !month.isAfter(endMonth); month = month.plusMonths(1)) {
+            String monthKey = month.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            fullStats.add(dataMap.getOrDefault(monthKey,
+                new NovelStatusResponseDTO(monthKey, 0, 0)));
+        }
+
+        return fullStats;
+    }
+
+
+    private NovelStatusResponseDTO convertToDTO(NovelStatsProjection projection) {
+        return NovelStatusResponseDTO.builder()
+            .date(projection.getDate())
+            .newNovels(projection.getNewNovels() != null ? projection.getNewNovels() : 0)
+            .completedNovels(projection.getCompletedNovels() != null ? projection.getCompletedNovels() : 0)
+            .build();
     }
 }
