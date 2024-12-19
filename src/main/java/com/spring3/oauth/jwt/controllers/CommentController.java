@@ -4,11 +4,9 @@ import com.spring3.oauth.jwt.models.request.CreateCommentRequest;
 import com.spring3.oauth.jwt.services.RedisService;
 import com.spring3.oauth.jwt.services.impl.CommentServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-@Value("${ALLOW_ORIGIN}")
-private String allowedOrigins;
 
 @RestController
 @RequiredArgsConstructor
