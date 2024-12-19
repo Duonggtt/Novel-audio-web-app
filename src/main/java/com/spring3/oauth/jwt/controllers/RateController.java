@@ -21,6 +21,11 @@ public class RateController {
         return ResponseEntity.ok(rateService.getRatePointByNovelSlug(slug, userId));
     }
 
+    @GetMapping("/")
+    public ResponseEntity<?> getAllRates() {
+        return ResponseEntity.ok(rateService.getAllRatePoint());
+    }
+
     @PutMapping("/set-rate/{slug}")
     public ResponseEntity<?> updateRate(@PathVariable String slug,
                                         @RequestBody UpdateRatePointRequest request,

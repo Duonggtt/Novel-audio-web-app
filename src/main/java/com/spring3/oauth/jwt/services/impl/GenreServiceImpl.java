@@ -1,8 +1,10 @@
 package com.spring3.oauth.jwt.services.impl;
 
 import com.spring3.oauth.jwt.entity.Genre;
+import com.spring3.oauth.jwt.entity.Novel;
 import com.spring3.oauth.jwt.exception.NotFoundException;
 import com.spring3.oauth.jwt.repositories.GenreRepository;
+import com.spring3.oauth.jwt.repositories.NovelRepository;
 import com.spring3.oauth.jwt.services.GenreService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.List;
 public class GenreServiceImpl implements GenreService {
 
     private final GenreRepository genreRepository;
+    private final NovelRepository novelRepository;
 
     @Override
     public List<Genre> getAllGenres() {
@@ -60,6 +63,10 @@ public class GenreServiceImpl implements GenreService {
     public void deleteGenre(Integer id) {
         Genre genre = genreRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Genre not found with id: " + id));
+        List<Novel> novels = novelRepository.findAllByGenreId(id);
+        for(Novel novel : novels) {
+            novel.getGenres().remove(genre);
+        }
         genreRepository.delete(genre);
     }
 }

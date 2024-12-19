@@ -7,6 +7,6 @@ import org.springframework.data.domain.Pageable;
 public interface LikedLibraryService {
     LikedLibraryResponseDTO getLikedLibraryByUserId(Integer userId);
     void deleteLikedLibrary(Integer userId, Integer novelId);
-    LikedLibraryResponseDTO addNovelToLikedLibrary(UpdateLikedLibraryRequest request);
+    boolean addNovelToLikedLibrary(UpdateLikedLibraryRequest request);
     void createLikedLibrary(long UserId);
 }

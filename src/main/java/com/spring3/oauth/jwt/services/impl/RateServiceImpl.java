@@ -2,8 +2,10 @@ package com.spring3.oauth.jwt.services.impl;
 
 import com.spring3.oauth.jwt.entity.Novel;
 import com.spring3.oauth.jwt.entity.Rate;
+import com.spring3.oauth.jwt.entity.User;
 import com.spring3.oauth.jwt.entity.UserRate;
 import com.spring3.oauth.jwt.exception.NotFoundException;
+import com.spring3.oauth.jwt.models.dtos.RateListResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.RateResponseDTO;
 import com.spring3.oauth.jwt.models.request.UpdateRatePointRequest;
 import com.spring3.oauth.jwt.repositories.NovelRepository;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +93,9 @@ public class RateServiceImpl implements RateService {
             .build();
     }
 
+    public List<RateListResponseDTO> getAllRatePoint() {
+        return rateRepository.findAllRatePoint();
+    }
 
     @Override
     public RateResponseDTO getRatePointByNovelSlug(String slug, long userId) {

@@ -53,24 +53,27 @@ public class LikedLibraryServiceImpl implements LikedLibraryService {
     }
 
     @Override
-    public LikedLibraryResponseDTO addNovelToLikedLibrary(UpdateLikedLibraryRequest request) {
+    public boolean addNovelToLikedLibrary(UpdateLikedLibraryRequest request) {
         LikedLibrary likedLibrary = likedLibraryRepository.findByUser_Id(request.getUserId());
         if(likedLibrary == null) {
             createLikedLibrary(request.getUserId());
         }
         List<Novel> novels = likedLibrary.getNovels();
-        for(Integer novelId : request.getNovelId()) {
-            Novel novel = novelRepository.findById(novelId)
-                .orElseThrow(() -> new NotFoundException("Novel not found with id: " + novelId));
-            if (novels.contains(novel)) {
-                novels.remove(novel);
-            } else {
-                novels.add(novel);
-            }
+        Novel novel = novelRepository.findBySlug(request.getSlug());
+        if(novel == null) {
+            throw new NotFoundException("Novel not found with slug: " + request.getSlug());
         }
-        likedLibrary.setNovels(novels);
-        likedLibraryRepository.save(likedLibrary);
-        return convertToLikedDto(likedLibrary);
+        if (novels.contains(novel)) {
+            novels.remove(novel);
+            likedLibrary.setNovels(novels);
+            likedLibraryRepository.save(likedLibrary);
+            return false;
+        } else {
+            novels.add(novel);
+            likedLibrary.setNovels(novels);
+            likedLibraryRepository.save(likedLibrary);
+            return true;
+        }
     }
 
     @Override

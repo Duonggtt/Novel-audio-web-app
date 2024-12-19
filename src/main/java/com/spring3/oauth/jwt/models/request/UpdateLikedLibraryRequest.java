@@ -13,5 +13,5 @@ import java.util.List;
 @ToString
 public class UpdateLikedLibraryRequest {
     private Integer userId;
-    private List<Integer> novelId;
+    private String slug;
 }

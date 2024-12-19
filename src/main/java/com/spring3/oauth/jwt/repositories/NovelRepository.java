@@ -149,4 +149,11 @@ public interface NovelRepository extends JpaRepository<Novel, Integer> {
 
     @Query("SELECT COUNT(n) FROM Novel n WHERE n.releasedAt BETWEEN :startDate AND :endDate")
     long countByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    @Query("SELECT n " +
+        "FROM Novel n " +
+        "JOIN n.author a " +
+        "JOIN n.genres g " +
+        "WHERE g.id = ?1")
+    List<Novel> findAllByGenreId(Integer id);
 }
