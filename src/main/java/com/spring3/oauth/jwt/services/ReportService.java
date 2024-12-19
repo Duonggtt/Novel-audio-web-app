@@ -5,8 +5,13 @@ import com.spring3.oauth.jwt.entity.UserActivityReport;
 import com.spring3.oauth.jwt.models.dtos.PayReportResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
 import com.spring3.oauth.jwt.repositories.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.time.LocalDate;
@@ -19,7 +24,11 @@ import java.util.*;
 import java.time.*;
 import java.util.stream.IntStream;
 
+
 @Service
+@RequiredArgsConstructor
+@Transactional
+@Slf4j
 public class ReportService {
     @Autowired
     private ReportRepository reportRepository;
@@ -147,24 +156,103 @@ public class ReportService {
             .collect(Collectors.toList());
     }
 
-    public TotalQuantityResponseDTO getTotalQuantityInfo() {
+    public List<TotalQuantityResponseDTO> getAllQuantityInfo() {
         return CompletableFuture.supplyAsync(() -> {
-            TotalQuantityResponseDTO dto = new TotalQuantityResponseDTO();
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime firstDayOfCurrentMonth = now.withDayOfMonth(1)
+                    .withHour(0).withMinute(0).withSecond(0);
+                LocalDateTime firstDayOfLastMonth = firstDayOfCurrentMonth.minusMonths(1);
 
-            // Sử dụng parallel stream để thực hiện các truy vấn đồng thời
-            List<CompletableFuture<Void>> futures = Arrays.asList(
-                CompletableFuture.runAsync(() -> dto.setNovelQuantity(novelRepository.count())),
-                CompletableFuture.runAsync(() -> dto.setChapterQuantity(chapterRepository.count())),
-                CompletableFuture.runAsync(() -> dto.setUserQuantity(userRepository.count())),
-                CompletableFuture.runAsync(() -> dto.setReadQuantity(userRepository.countAllReadCounts())),
-                CompletableFuture.runAsync(() -> dto.setCommentQuantity(commentRepository.count())),
-                CompletableFuture.runAsync(() -> dto.setTotalAmount(paymentRepository.sumAllAmount()))
-            );
+                String currentDate = now.format(formatter);
+                String firstDayCurrentMonth = firstDayOfCurrentMonth.format(formatter);
+                String firstDayLastMonth = firstDayOfLastMonth.format(formatter);
 
-            // Đợi tất cả các future hoàn thành
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                List<CompletableFuture<TotalQuantityResponseDTO>> futures = new ArrayList<>();
 
-            return dto;
+                // Novel Quantity
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    long currentTotal = novelRepository.count();
+                    long lastMonthCount = novelRepository.countByCreatedDateBefore(firstDayOfCurrentMonth);
+                    return calculateMetric("novelQuantity", currentTotal, lastMonthCount);
+                }));
+
+                // Chapter Quantity
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    long currentTotal = chapterRepository.count();
+                    long lastMonthCount = chapterRepository.countByCreatedDateBefore(firstDayOfCurrentMonth);
+                    return calculateMetric("chapterQuantity", currentTotal, lastMonthCount);
+                }));
+
+                // User Quantity
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    long currentTotal = userRepository.count();
+                    long lastMonthCount = userRepository.countByCreatedDateBefore(firstDayOfCurrentMonth);
+                    return calculateMetric("userQuantity", currentTotal, lastMonthCount);
+                }));
+
+                // Read Quantity
+                futures.add(CompletableFuture.supplyAsync(() ->
+                    TotalQuantityResponseDTO.builder()
+                        .name("readQuantity")
+                        .total(userRepository.countAllReadCounts())
+                        .build()
+                ));
+
+                // Comment Quantity
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    long currentTotal = commentRepository.count();
+                    long lastMonthCount = commentRepository.countByCreatedDateBefore(firstDayOfCurrentMonth);
+                    return calculateMetric("commentQuantity", currentTotal, lastMonthCount);
+                }));
+
+                // Total Amount
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    BigDecimal currentTotal = paymentRepository.sumAllAmount();
+                    BigDecimal lastMonthAmount = paymentRepository.sumAmountByDateRange(
+                        firstDayCurrentMonth,
+                        firstDayLastMonth
+                    );
+                    return calculateMetricForAmount("totalAmount",
+                        currentTotal != null ? currentTotal.longValue() : 0,
+                        lastMonthAmount != null ? lastMonthAmount.longValue() : 0);
+                }));
+
+                return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList()))
+                    .join();
+            } catch (Exception e) {
+                log.error("Error while calculating metrics", e);
+                throw new RuntimeException("Failed to calculate metrics", e);
+            }
         }).join();
+    }
+
+    private TotalQuantityResponseDTO calculateMetric(String name, long currentValue, long previousValue) {
+        if (previousValue <= 0) {
+            return TotalQuantityResponseDTO.builder()
+                .name(name)
+                .total(currentValue)
+                .up(0)
+                .down(0)
+                .build();
+        }
+
+        double percentageChange = ((double) (currentValue - previousValue) / previousValue) * 100;
+        double roundedChange = Math.round(percentageChange * 10.0) / 10.0;
+
+        return TotalQuantityResponseDTO.builder()
+            .name(name)
+            .total(currentValue)
+            .up(roundedChange > 0 ? roundedChange : 0)
+            .down(roundedChange < 0 ? Math.abs(roundedChange) : 0)
+            .build();
+    }
+
+    private TotalQuantityResponseDTO calculateMetricForAmount(String name, long currentValue, long previousValue) {
+        return calculateMetric(name, currentValue, previousValue);
     }
 }

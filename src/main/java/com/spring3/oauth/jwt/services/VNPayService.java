@@ -54,6 +54,8 @@ public class VNPayService {
 
     @Autowired
     private CoinPackageRepository coinPackageRepository;
+    @Autowired
+    private CoinWalletRepository coinWalletRepository;
 
     public String createPayment(PaymentRequest request, long userId) {
         // Validate user
@@ -369,6 +371,9 @@ public class VNPayService {
                 CoinPackage packageInfo = coinPackageRepository.findById(paymentCoinOrderInfo.getPackageCoinId())
                     .orElseThrow(() -> new RuntimeException("Package not found with ID: " + paymentCoinOrderInfo.getPackageCoinId()));
 
+                CoinWallet wallet = user.getWallet();
+                wallet.setCoinAmount(wallet.getCoinAmount() + packageInfo.getFinalCoinAmount());
+                coinWalletRepository.save(wallet);
 
                 // Trả về thông tin thành công
                 response.setSuccess(true);

@@ -6,6 +6,7 @@ import com.spring3.oauth.jwt.entity.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,9 +30,6 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
    @Query("SELECT COUNT(u) FROM User u WHERE u.tier.id = ?1")
    int countAllByTierId(long tier);
 
-   @Query("SELECT SUM(u.chapterReadCount) FROM User u")
-   long countAllReadCounts();
-
    @Query(nativeQuery = true, value = """
         SELECT 
             CASE 
@@ -54,4 +52,13 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
             END
     """)
    List<Object[]> getUserCountByScoreRange();
+
+   @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt < :date")
+   long countByCreatedDateBefore(LocalDateTime date);
+
+   @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt BETWEEN :startDate AND :endDate")
+   long countByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+   @Query("SELECT SUM(u.chapterReadCount) FROM User u")
+   long countAllReadCounts();
 }

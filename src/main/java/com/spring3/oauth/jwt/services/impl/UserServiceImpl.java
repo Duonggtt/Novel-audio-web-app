@@ -64,6 +64,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private CoinWalletRepository walletRepository;
+    @Autowired
+    private LikedLibraryRepository likedLibraryRepository;
 
     // Hàm xử lý quên mật khẩu
     @Override
@@ -259,6 +261,16 @@ public class UserServiceImpl implements UserService {
         } else {
 //            user.setCreatedBy(currentUser);
             userRepository.save(user);
+
+            LikedLibrary likedLibraryCheck = likedLibraryRepository.findByUser_Id((int) user.getId());
+            if(likedLibraryCheck != null) {
+                throw new NotFoundException("Liked Library already exists with user id: " + user.getId());
+            }
+
+            LikedLibrary likedLibrary = new LikedLibrary();
+            likedLibrary.setUser(user);
+            likedLibrary.setNovels(null);
+            likedLibraryRepository.save(likedLibrary);
 
             CoinWallet wallet = new CoinWallet();
             wallet.setId("wallet_" + user.getId());

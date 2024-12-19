@@ -10,10 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class TotalQuantityResponseDTO {
-    private long novelQuantity;
-    private long chapterQuantity;
-    private long userQuantity;
-    private long readQuantity;
-    private long commentQuantity;
-    private long totalAmount;
+    private String name;
+    private long total;
+    private double up;
+    private double down;
 }

@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("select p from Payment p where p.user.id = ?1")
     List<Payment> findAllUserById(long userId);
 
-    @Query("SELECT SUM(p.amount) FROM Payment p")
-    long sumAllAmount();
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p")
+    BigDecimal sumAllAmount();
+
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.payDate < :date")
+    BigDecimal sumAmountByCreatedDateBefore(@Param("date") String date);
+
+    // Thêm method mới để lấy tổng amount theo khoảng thời gian
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p " +
+        "WHERE p.payDate >= :startDate AND p.payDate < :endDate")
+    BigDecimal sumAmountByDateRange(@Param("startDate") String startDate,
+                                    @Param("endDate") String endDate);
 }

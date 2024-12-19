@@ -13,7 +13,7 @@ public class RedisConfig {
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         JedisConnectionFactory factory = new JedisConnectionFactory();
-        factory.setHostName("localhost");
+        factory.setHostName("14.225.207.58");
         factory.setPort(6379);
         factory.setUsePool(true); // Dùng pool kết nối
         return factory;

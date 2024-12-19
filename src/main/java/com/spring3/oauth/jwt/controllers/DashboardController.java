@@ -1,5 +1,6 @@
 package com.spring3.oauth.jwt.controllers;
 
+import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
 import com.spring3.oauth.jwt.services.ReportService;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
 import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
@@ -10,6 +11,10 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,7 +65,13 @@ public class DashboardController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/quantity-info")
     public ResponseEntity<?> getAllQuantityInfo() {
-        return ResponseEntity.ok(reportService.getTotalQuantityInfo());
+        List<TotalQuantityResponseDTO> metrics = reportService.getAllQuantityInfo();
+        Map<String, TotalQuantityResponseDTO> response = new HashMap<>();
+
+        // Convert list to map for easier client-side handling
+        metrics.forEach(metric -> response.put(metric.getName(), metric));
+
+        return ResponseEntity.ok(response);
     }
 
 }

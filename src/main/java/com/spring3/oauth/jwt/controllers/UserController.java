@@ -226,7 +226,6 @@ public class UserController {
         return ResponseEntity.ok().body(userResponseDTO);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/test")
     public String test() {
         try {

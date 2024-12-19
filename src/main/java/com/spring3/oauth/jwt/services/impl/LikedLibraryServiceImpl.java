@@ -56,16 +56,17 @@ public class LikedLibraryServiceImpl implements LikedLibraryService {
     public LikedLibraryResponseDTO addNovelToLikedLibrary(UpdateLikedLibraryRequest request) {
         LikedLibrary likedLibrary = likedLibraryRepository.findByUser_Id(request.getUserId());
         if(likedLibrary == null) {
-            throw new NotFoundException("Liked Library not found with user id: " + request.getUserId());
+            createLikedLibrary(request.getUserId());
         }
         List<Novel> novels = likedLibrary.getNovels();
         for(Integer novelId : request.getNovelId()) {
             Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new NotFoundException("Novel not found with id: " + novelId));
-            if(novels.contains(novel)) {
-                throw new NotFoundException("Novel already exists in liked library with id: " + novelId);
+            if (novels.contains(novel)) {
+                novels.remove(novel);
+            } else {
+                novels.add(novel);
             }
-            novels.add(novel);
         }
         likedLibrary.setNovels(novels);
         likedLibraryRepository.save(likedLibrary);

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -16,4 +17,10 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
     Chapter findByChapterNoAndNovelSlug(int chapNo, String slug);
     @Query("SELECT c FROM Chapter c WHERE c.novel.slug = :slug ORDER BY c.chapterNo ASC")
     Page<Chapter> findAllByNovelSlugPage(String slug, Pageable pageable);
+
+    @Query("SELECT COUNT(c) FROM Chapter c WHERE c.releasedAt < :date")
+    long countByCreatedDateBefore(LocalDateTime date);
+
+    @Query("SELECT COUNT(c) FROM Chapter c WHERE c.releasedAt BETWEEN :startDate AND :endDate")
+    long countByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 }
