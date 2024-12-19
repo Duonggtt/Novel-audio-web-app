@@ -5,6 +5,7 @@ import com.spring3.oauth.jwt.entity.UserActivityReport;
 import com.spring3.oauth.jwt.models.dtos.NovelStatusResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.PayReportResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
+import com.spring3.oauth.jwt.models.response.NovelStatisticsResponse;
 import com.spring3.oauth.jwt.repositories.*;
 import com.spring3.oauth.jwt.repositories.itf.NovelStatsProjection;
 import lombok.RequiredArgsConstructor;
@@ -260,13 +261,12 @@ public class ReportService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "novelStats", key = "#timeRange")
-    public List<NovelStatusResponseDTO> getNovelStatistics(String timeRange) {
-        return switch (timeRange.toLowerCase()) {
-            case "week" -> getWeeklyStats();
-            case "year" -> getYearlyStats();
-            default -> throw new IllegalArgumentException("Invalid time range");
-        };
+    @Cacheable(value = "novelStats", key = "'all'")
+    public NovelStatisticsResponse getNovelStatistics() {
+        List<NovelStatusResponseDTO> weeklyStats = getWeeklyStats();
+        List<NovelStatusResponseDTO> yearlyStats = getYearlyStats();
+
+        return new NovelStatisticsResponse(weeklyStats, yearlyStats);
     }
 
     private List<NovelStatusResponseDTO> getWeeklyStats() {

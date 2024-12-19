@@ -2,6 +2,7 @@ package com.spring3.oauth.jwt.controllers;
 
 import com.spring3.oauth.jwt.models.dtos.NovelStatusResponseDTO;
 import com.spring3.oauth.jwt.models.dtos.TotalQuantityResponseDTO;
+import com.spring3.oauth.jwt.models.response.NovelStatisticsResponse;
 import com.spring3.oauth.jwt.services.ReportService;
 import com.spring3.oauth.jwt.services.impl.NovelServiceImpl;
 import com.spring3.oauth.jwt.services.impl.UserServiceImpl;
@@ -72,9 +73,8 @@ public class DashboardController {
     @Operation(summary = "Get novel statistics for dashboard")
     @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully")
     @GetMapping("/novel-status")
-    public ResponseEntity<List<NovelStatusResponseDTO>> getNovelStatus(
-        @RequestParam(defaultValue = "week") String timeRange) {
-        return ResponseEntity.ok(reportService.getNovelStatistics(timeRange));
+    public ResponseEntity<NovelStatisticsResponse> getNovelStatus() {
+        return ResponseEntity.ok(reportService.getNovelStatistics());
     }
 
 }
