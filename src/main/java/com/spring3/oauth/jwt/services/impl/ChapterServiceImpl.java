@@ -119,8 +119,10 @@ public class ChapterServiceImpl implements ChapterService {
 
     @Override
     public ChapterResponseDTO saveChapter(UpsertChapterRequest request) {
-        Novel novel = novelRepository.findById(request.getNovelId())
-            .orElseThrow(() -> new NotFoundException("Novel not found with id: " + request.getNovelId()));
+        Novel novel = novelRepository.findBySlug(request.getSlug());
+        if(novel == null) {
+            throw new NotFoundException("Novel not found with slug: " + request.getSlug());
+        }
         novel.setTotalChapters(novel.getTotalChapters() + 1);
         novelRepository.save(novel);
 

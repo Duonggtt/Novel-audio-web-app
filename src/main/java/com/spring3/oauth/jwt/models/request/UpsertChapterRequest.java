@@ -14,5 +14,5 @@ public class UpsertChapterRequest {
     private String title;
     private String contentDoc;
     private String thumbnailImageUrl;
-    private Integer novelId;
+    private String slug;
 }
