@@ -417,6 +417,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void addPoint(int point, long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        user.setPoint(user.getPoint() + point);
+        userRepository.save(user);
+    }
+
+    @Override
     public void followAuthor(String currentUsername, long authorId) {
         User currentUser = userRepository.findByUsername(currentUsername);
         User author = userRepository.findById(authorId)

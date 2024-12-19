@@ -44,4 +44,6 @@ public interface UserService {
     Map<String, Integer> getAllUsersQuantityForEachLevel();
     Map<String, Integer> getUserCountByScoreRange();
     Map<String, Integer> getTotalLikeCountsForLastWeek();
+
+    void addPoint(int point, long userId);
 }

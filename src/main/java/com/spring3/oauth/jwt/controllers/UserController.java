@@ -12,6 +12,7 @@ import com.spring3.oauth.jwt.services.EmailService;
 import com.spring3.oauth.jwt.services.JwtService;
 import com.spring3.oauth.jwt.services.RefreshTokenService;
 import com.spring3.oauth.jwt.services.UserService;
+import com.spring3.oauth.jwt.services.impl.CoinWalletServiceImpl;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -48,6 +49,8 @@ public class UserController {
     private AuthenticationManager authenticationManager;
 
     private final UserRepository userRepository;
+    @Autowired
+    private CoinWalletServiceImpl coinWalletServiceImpl;
 
     public UserController(EmailService emailService, RoleRepository roleRepository, RestTemplate restTemplate, UserRepository userRepository) {
         this.emailService = emailService;
@@ -177,6 +180,18 @@ public class UserController {
     public ResponseEntity<?> updateReadCountChapter(@RequestParam long userId) {
         userService.updateReadCountChapter(userId);
         return ResponseEntity.ok("Update read count chapter successfully.");
+    }
+
+    @PutMapping("/wallet/add-coin")
+    public ResponseEntity<?> addCoinToWallet(@RequestParam int coin, @RequestParam long userId) {
+        coinWalletServiceImpl.addCoinToWallet(coin, userId);
+        return ResponseEntity.ok("Coin added to wallet successfully.");
+    }
+
+    @PutMapping("/user/add-point")
+    public ResponseEntity<?> addPoint(@RequestParam int point, @RequestParam long userId) {
+        userService.addPoint(point, userId);
+        return ResponseEntity.ok("Point added successfully.");
     }
 
     @PostMapping(value = "/save")

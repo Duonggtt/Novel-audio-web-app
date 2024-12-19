@@ -56,9 +56,6 @@ public interface UserRepository extends RefreshableCRUDRepository<User, Long> {
    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt < :date")
    long countByCreatedDateBefore(LocalDateTime date);
 
-   @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt BETWEEN :startDate AND :endDate")
-   long countByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
-
    @Query("SELECT SUM(u.chapterReadCount) FROM User u")
    long countAllReadCounts();
 }
