@@ -1,11 +1,10 @@
 package com.spring3.oauth.jwt.services;
 
 import com.spring3.oauth.jwt.models.dtos.*;
-import com.spring3.oauth.jwt.models.request.ForgotPassRequest;
-import com.spring3.oauth.jwt.models.request.GenresSelectedRequest;
-import com.spring3.oauth.jwt.models.request.UpdateUserRequest;
-import com.spring3.oauth.jwt.models.request.UserRequest;
+import com.spring3.oauth.jwt.models.request.*;
+import com.spring3.oauth.jwt.models.response.AuthorResponse;
 import com.spring3.oauth.jwt.models.response.UserResponse;
+import com.spring3.oauth.jwt.repositories.itf.AuthorProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,9 +15,10 @@ import java.util.Map;
 public interface UserService {
 
     UserResponse saveUser(UserRequest userRequest);
+    UserResponse saveAuthor(AuthorRequest authorRequest);
 
     UserResponse getUser();
-
+    boolean setStatusUser(String username);
     UserResponseDTO getProfile(String username);
 
     Page<UserResponse> getAllUser(Pageable pageable);
@@ -45,6 +45,6 @@ public interface UserService {
     Map<String, Integer> getTotalLikeCountsForLastWeek();
 
     void addPoint(int point, long userId);
-
+    PagedResultDTO<AuthorResponse> getAllAuthor(PaginationDTO paginationDTO);
     List<AuthorResponseDTO> getAuthors();
 }

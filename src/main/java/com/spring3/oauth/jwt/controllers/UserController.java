@@ -207,6 +207,22 @@ public class UserController {
         }
     }
 
+    @PutMapping("/auth/set-account-status")
+    public ResponseEntity<?> setAccountStatus(@RequestParam String username) {
+        return ResponseEntity.ok(userService.setStatusUser(username));
+    }
+
+
+    @PostMapping(value = "/save-author")
+    public ResponseEntity<?> saveAuthor(@RequestBody AuthorRequest request) {
+        try {
+            UserResponse userResponse = userService.saveAuthor(request);
+            return ResponseEntity.ok(userResponse);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PutMapping("/set-account-status-active")
     public ResponseEntity<?> setAccountStatusActive(@RequestParam String username) {
         return ResponseEntity.ok(userService.confirmPaymentStatus(username));
@@ -223,6 +239,21 @@ public class UserController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @GetMapping("/page/authors")
+    public ResponseEntity<?> getAllAuthors(
+        @RequestParam(defaultValue = "0") int pageNum,
+        @RequestParam(defaultValue = "10") int pageSize) {
+
+        // Chuẩn bị DTO phân trang
+        PaginationDTO paginationDTO = PaginationDTO.builder()
+            .pageNum(pageNum)
+            .pageSize(pageSize)
+            .build();
+
+        // Gọi Service và trả về kết quả
+        return ResponseEntity.ok(userService.getAllAuthor(paginationDTO));
     }
 
 

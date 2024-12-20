@@ -1,24 +1,20 @@
 package com.spring3.oauth.jwt.models.request;
 
-import com.spring3.oauth.jwt.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UpdateUserRequest {
-
+public class AuthorRequest {
+    private Long id;
+    private String username;
+    private String password;
     private String fullName;
-    private String email;
     private LocalDate dob;
-    private String imagePath;
-    private Set<Role> roles;
+    private String email;
 }

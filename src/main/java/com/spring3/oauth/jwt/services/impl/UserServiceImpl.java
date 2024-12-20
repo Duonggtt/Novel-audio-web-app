@@ -5,10 +5,8 @@ import com.spring3.oauth.jwt.entity.Package;
 import com.spring3.oauth.jwt.entity.enums.UserStatusEnum;
 import com.spring3.oauth.jwt.exception.NotFoundException;
 import com.spring3.oauth.jwt.models.dtos.*;
-import com.spring3.oauth.jwt.models.request.ForgotPassRequest;
-import com.spring3.oauth.jwt.models.request.GenresSelectedRequest;
-import com.spring3.oauth.jwt.models.request.UpdateUserRequest;
-import com.spring3.oauth.jwt.models.request.UserRequest;
+import com.spring3.oauth.jwt.models.request.*;
+import com.spring3.oauth.jwt.models.response.AuthorResponse;
 import com.spring3.oauth.jwt.models.response.UserResponse;
 import com.spring3.oauth.jwt.repositories.*;
 import com.spring3.oauth.jwt.repositories.itf.AuthorProjection;
@@ -20,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -226,7 +226,7 @@ public class UserServiceImpl implements UserService {
         User user = modelMapper.map(userRequest, User.class);
         user.setPassword(encodedPassword);
         user.setRoles(roles);
-        user.setStatus(UserStatusEnum.INACTIVE);
+        user.setStatus(UserStatusEnum.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         user.setDob(null);
@@ -243,7 +243,7 @@ public class UserServiceImpl implements UserService {
                 oldUser.setUsername(user.getUsername());
                 oldUser.setEmail(user.getEmail());
                 oldUser.setRoles(roles);
-                oldUser.setStatus(UserStatusEnum.INACTIVE);
+                oldUser.setStatus(UserStatusEnum.ACTIVE);
                 oldUser.setImagePath(null);
                 oldUser.setCreatedAt(LocalDateTime.now());
                 oldUser.setUpdatedAt(LocalDateTime.now());
@@ -257,6 +257,98 @@ public class UserServiceImpl implements UserService {
                 userRepository.refresh(savedUser);
             } else {
                 throw new RuntimeException("Can't find record with identifier: " + userRequest.getId());
+            }
+        } else {
+//            user.setCreatedBy(currentUser);
+            userRepository.save(user);
+
+            LikedLibrary likedLibraryCheck = likedLibraryRepository.findByUser_Id((int) user.getId());
+            if(likedLibraryCheck != null) {
+                throw new NotFoundException("Liked Library already exists with user id: " + user.getId());
+            }
+
+            LikedLibrary likedLibrary = new LikedLibrary();
+            likedLibrary.setUser(user);
+            likedLibrary.setNovels(null);
+            likedLibraryRepository.save(likedLibrary);
+
+            CoinWallet wallet = new CoinWallet();
+            wallet.setId("wallet_" + user.getId());
+            wallet.setCoinAmount(0);
+            wallet.setCoinSpent(0);
+            wallet.setCreatedDate(LocalDate.now());
+            walletRepository.save(wallet);
+            user.setWallet(wallet);
+            savedUser = userRepository.save(user);
+        }
+        userRepository.refresh(savedUser);
+        UserResponse userResponse = modelMapper.map(savedUser, UserResponse.class);
+        return userResponse;
+    }
+
+    @Override
+    public UserResponse saveAuthor(AuthorRequest authorRequest) {
+        if(authorRequest.getUsername() == null){
+            throw new RuntimeException("Parameter username is not found in request..!!");
+        } else if(authorRequest.getPassword() == null){
+            throw new RuntimeException("Parameter password is not found in request..!!");
+        }else if(authorRequest.getEmail() == null){
+            throw new RuntimeException("Parameter email is not found in request..!!");
+        }
+
+        List<User> userListExistUsername = userRepository.findAllByUsername(authorRequest.getUsername());
+
+        List<User> userListExistEmail = userRepository.findAllByEmail(authorRequest.getEmail());
+
+        if(!userListExistUsername.isEmpty()) {
+            throw new RuntimeException("Username is already exist..!!");
+        }
+        if(!userListExistEmail.isEmpty()) {
+            throw new RuntimeException("Email is already exist..!!");
+        }
+        User savedUser = null;
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String rawPassword = authorRequest.getPassword();
+        String encodedPassword = encoder.encode(rawPassword);
+
+        Set<Role> roles = roleRepository.findAllByName("ROLE_AUTHOR");
+        User user = modelMapper.map(authorRequest, User.class);
+        user.setPassword(encodedPassword);
+        user.setRoles(roles);
+        user.setFullName(authorRequest.getFullName());
+        user.setStatus(UserStatusEnum.ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setDob(authorRequest.getDob());
+        user.setChapterReadCount(0);
+        user.setPoint(1);
+        user.setSelectedGenres(null);
+        user.setHobbies(null);
+        user.setWallet(null);
+        if(authorRequest.getId() != null){
+            User oldUser = userRepository.findFirstById(authorRequest.getId());
+            if(oldUser != null){
+                oldUser.setId(user.getId());
+                oldUser.setPassword(user.getPassword());
+                oldUser.setUsername(user.getUsername());
+                oldUser.setEmail(user.getEmail());
+                oldUser.setFullName(user.getFullName());
+                oldUser.setRoles(roles);
+                oldUser.setStatus(UserStatusEnum.ACTIVE);
+                oldUser.setImagePath(null);
+                oldUser.setCreatedAt(LocalDateTime.now());
+                oldUser.setUpdatedAt(LocalDateTime.now());
+                oldUser.setDob(user.getDob());
+                oldUser.setChapterReadCount(user.getChapterReadCount());
+                oldUser.setPoint(user.getPoint());
+                oldUser.setSelectedGenres(null);
+                oldUser.setHobbies(null);
+                oldUser.setWallet(user.getWallet());
+                savedUser = userRepository.save(oldUser);
+                userRepository.refresh(savedUser);
+            } else {
+                throw new RuntimeException("Can't find record with identifier: " + authorRequest.getId());
             }
         } else {
 //            user.setCreatedBy(currentUser);
@@ -306,20 +398,34 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean setStatusUser(String username) {
+        User user = userRepository.findByUsername(username);
+        if(user == null){
+            throw new RuntimeException("User with username: " + username + " is not found..!!");
+        }
+        if (user.getStatus().equals(UserStatusEnum.ACTIVE)) {
+            user.setStatus(UserStatusEnum.INACTIVE);
+            userRepository.save(user);
+            return false;
+        } else {
+            user.setStatus(UserStatusEnum.ACTIVE);
+            userRepository.save(user);
+            return true;
+        }
+    }
+
+    @Override
     public UserResponseDTO updateProfile(UpdateUserRequest request, String username) {
         User user = userRepository.findByUsername(username);
         if(user == null){
             throw new RuntimeException("User with username: " + username + " is not found..!!");
         }
-        List<Hobby> hobbies = hobbyRepository.findAllById(request.getHobbyIds());
-        if(hobbies.isEmpty()) {
-            throw new NullPointerException("Hobby ids is null!");
-        }
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setDob(request.getDob());
         user.setUpdatedAt(LocalDateTime.now());
-        user.setHobbies(hobbies);
+        user.setImagePath(request.getImagePath());
+        user.setRoles(request.getRoles());
         userRepository.save(user);
         return convertToDTO(user);
     }
@@ -589,6 +695,8 @@ public class UserServiceImpl implements UserService {
         }
         if(user.getRoles().stream().map(Role::getName).toList().contains("ROLE_AUTHOR")) {
             userResponseDTO.setFollowerCount(user.getFollowerCount());
+            int totalNovel = userRepository.countAllByRoles(user.getUsername(), "ROLE_AUTHOR");
+            userResponseDTO.setNovelOwnCount(totalNovel);
         }
         Subscription subscription = subscriptionRepository.findSubsByUserIdAndActive(user.getId(), true);
         if(subscription == null) {
@@ -613,5 +721,28 @@ public class UserServiceImpl implements UserService {
         Page<User> users = userRepository.findAll(pageable);
         return users.map(user -> modelMapper.map(user, UserResponse.class));
     }
+
+    @Override
+    public PagedResultDTO<AuthorResponse> getAllAuthor(PaginationDTO paginationDTO) {
+        Pageable pageable = createPageable(paginationDTO);
+        Page<AuthorResponse> pageResult = userRepository.findAllAuthors(pageable);
+        // Tạo kết quả phân trang và trả về
+        return PagedResultDTO.<AuthorResponse>builder()
+            .items(pageResult.getContent()) // Danh sách các AuthorResponse
+            .currentPage(pageResult.getNumber()) // Trang hiện tại
+            .totalPages(pageResult.getTotalPages()) // Tổng số trang
+            .totalItems(pageResult.getTotalElements()) // Tổng số bản ghi
+            .build();
+    }
+
+    // Chuyển PaginationDTO thành Pageable
+    public Pageable createPageable(PaginationDTO paginationDTO) {
+        return PageRequest.of(
+            paginationDTO.getPageNum(),
+            paginationDTO.getPageSize(),
+            Sort.by("fullName").ascending() // Sắp xếp theo cột `fullName`, thay đổi nếu cần
+        );
+    }
+
 
 }

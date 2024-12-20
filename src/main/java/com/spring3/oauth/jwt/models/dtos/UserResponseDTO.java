@@ -25,6 +25,7 @@ public class UserResponseDTO {
     private List<Integer> selectedGenreIds;
     private List<String> hobbyNames;
     private int followerCount;
+    private int novelOwnCount;
     private String dayLeft;
     private int coinWallet;
     private int coinSpent;
